@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
 
+import com.qualcomm.hardware.dfrobot.HuskyLens;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -14,6 +15,9 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.robotcore.internal.system.Deadline;
+
+import java.util.concurrent.TimeUnit;
 
 
 /*
@@ -47,7 +51,13 @@ public class MainTeleOp extends OpMode {
     private CRServo rightIntakeServo;
     private CRServo windmillServo;
 
-    GoBildaPinpointDriver pinpoint;
+    private GoBildaPinpointDriver pinpoint;
+
+    private HuskyLens huskyLens;
+
+
+    Deadline rateLimit;
+    private final int READ_PERIOD = 1;
 
     /*
      * These two variables are used to control the velocity of the launcher motor.
@@ -96,6 +106,19 @@ public class MainTeleOp extends OpMode {
         rightIntakeServo = hardwareMap.get(CRServo.class, "right_intake_servo");
 
         pinpoint         = hardwareMap.get(GoBildaPinpointDriver.class,"pinpoint");
+        huskyLens        = hardwareMap.get(HuskyLens.class, "huskylens");
+
+        if (!huskyLens.knock()) {
+            telemetry.addData(">>", "Problem communicating with " + huskyLens.getDeviceName());
+        } else {
+            telemetry.addData(">>", "Press start to continue");
+        }
+
+        huskyLens.selectAlgorithm(HuskyLens.Algorithm.TAG_RECOGNITION);
+
+        rateLimit = new Deadline(READ_PERIOD, TimeUnit.SECONDS);
+
+        rateLimit.expire();
 
         /*
          * To drive forward, most robots need the motor on one side to be reversed,
@@ -182,6 +205,11 @@ public class MainTeleOp extends OpMode {
      */
     @Override
     public void loop() {
+        if (!rateLimit.hasExpired()) {
+            return; // might be a problem
+        }
+        rateLimit.reset();
+
         pinpoint.update();
 
         // Drive with macanum :| macanumDrive() handles the field
@@ -281,6 +309,26 @@ public class MainTeleOp extends OpMode {
         frontRightDrive.setPower(speeds[1]);
         backLeftDrive.setPower(speeds[2]);
         backRightDrive.setPower(speeds[3]);
+    }
+
+    int[] getAprilTagID() {
+
+        HuskyLens.Block[] blocks = huskyLens.blocks();
+
+        if (blocks == null) {
+            telemetry.addData("Block count", 0);
+            return new int[0];
+        }
+
+        int[] blockIDs = new int[blocks.length];
+        telemetry.addData("Block count", blocks.length);
+
+        for (int i = 0; i < blocks.length; i++) {
+            telemetry.addData("Block", blocks[i].toString());
+            blockIDs[i] = blocks[i].id;
+        }
+        return blockIDs;
+
     }
 
     void launch() {
