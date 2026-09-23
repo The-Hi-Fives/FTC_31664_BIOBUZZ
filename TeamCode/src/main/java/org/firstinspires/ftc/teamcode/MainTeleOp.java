@@ -4,6 +4,7 @@ import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
 
 import com.qualcomm.hardware.dfrobot.HuskyLens;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -36,7 +37,9 @@ import java.util.concurrent.TimeUnit;
  */
 
 @TeleOp(name = "Main TeleOp", group = "StarterBot")
-//@Disabled
+
+@Disabled // REMOVE AFTER, PLEASE!!!!!!!!!!
+
 public class MainTeleOp extends OpMode {
 
     // Declare OpMode members.
