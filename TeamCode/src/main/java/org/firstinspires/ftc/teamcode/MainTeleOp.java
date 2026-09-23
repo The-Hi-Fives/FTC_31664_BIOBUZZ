@@ -52,12 +52,9 @@ public class MainTeleOp extends OpMode {
     private CRServo windmillServo;
 
     private GoBildaPinpointDriver pinpoint;
-
     private HuskyLens huskyLens;
 
-
     Deadline rateLimit;
-    private final int READ_PERIOD = 1;
 
     /*
      * These two variables are used to control the velocity of the launcher motor.
@@ -116,6 +113,7 @@ public class MainTeleOp extends OpMode {
 
         huskyLens.selectAlgorithm(HuskyLens.Algorithm.TAG_RECOGNITION);
 
+        int READ_PERIOD = 1;
         rateLimit = new Deadline(READ_PERIOD, TimeUnit.SECONDS);
 
         rateLimit.expire();
@@ -206,7 +204,7 @@ public class MainTeleOp extends OpMode {
     @Override
     public void loop() {
         if (!rateLimit.hasExpired()) {
-            return; // might be a problem
+            return; // might be a problem idk
         }
         rateLimit.reset();
 
@@ -264,9 +262,9 @@ public class MainTeleOp extends OpMode {
 
     void macanumDrive() {
 
-        double drive    = gamepad1.left_stick_y;
-        double strafe   = gamepad1.left_stick_x;
-        double rotate   = gamepad1.right_stick_x;
+        double drive  = gamepad1.left_stick_y;
+        double strafe = gamepad1.left_stick_x;
+        double rotate = gamepad1.right_stick_x;
 
         // get the current robot rotation for
         // field centric.
@@ -360,6 +358,5 @@ public class MainTeleOp extends OpMode {
             windmillServo.setPower(0);
         }
     }
-
 
 }
