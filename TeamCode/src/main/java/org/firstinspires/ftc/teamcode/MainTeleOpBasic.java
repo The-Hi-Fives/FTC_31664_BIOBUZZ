@@ -284,10 +284,10 @@ public class MainTeleOpBasic extends OpMode {
 
         // get the speeds for all the motors.
         double[] speeds = {
-                (globalDrive + globalStrafe + rotate),
-                (globalDrive - globalStrafe - rotate),
-                (globalDrive - globalStrafe + rotate),
-                (globalDrive + globalStrafe - rotate)
+                (drive + strafe + rotate),
+                (drive - strafe - rotate),
+                (drive - strafe + rotate),
+                (drive + strafe - rotate)
         };
 
         // Because we are adding vectors and motors only take values between
