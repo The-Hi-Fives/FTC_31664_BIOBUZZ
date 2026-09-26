@@ -267,10 +267,20 @@ public class MainTeleOpBasic extends OpMode {
     }
 
     void macanumDrive() {
+        // speed adjustments
+        double multi = 1;
 
-        double drive  = -gamepad1.left_stick_y;
-        double strafe =  gamepad1.left_stick_x;
-        double rotate =  gamepad1.right_stick_x;
+        if (gamepad1.a) {
+            multi = 0.5;
+        } else if (gamepad1.b) {
+            multi = 0.3;
+        }
+
+        // Assign the input values to the variables
+
+        double drive  = -gamepad1.left_stick_y  * multi;
+        double strafe =  gamepad1.left_stick_x  * multi;
+        double rotate =  gamepad1.right_stick_x * multi;
 
         // get the current robot rotation for
         // field centric.
