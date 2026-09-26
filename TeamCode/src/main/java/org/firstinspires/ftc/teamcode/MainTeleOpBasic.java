@@ -54,7 +54,7 @@ public class MainTeleOpBasic extends OpMode {
     //private GoBildaPinpointDriver pinpoint;
     //private HuskyLens huskyLens;
 
-    Deadline rateLimit;
+    //Deadline rateLimit;
 
     /*
      * These two variables are used to control the velocity of the launcher motor.
@@ -66,8 +66,8 @@ public class MainTeleOpBasic extends OpMode {
      * in the launch() function to only run the windmill servo when the motor is spinning fast
      * enough to make a successful throw.
      */
-    public final int LAUNCHER_TARGET_VELOCITY = 1250;
-    public final int LAUNCHER_MIN_VELOCITY = 1200;
+    public final int LAUNCHER_TARGET_VELOCITY = 1300;
+    public final int LAUNCHER_MIN_VELOCITY = 1250;
 
     /*
      * These two variables store the power we need to apply to the motors. In other cases, we may
@@ -112,10 +112,10 @@ public class MainTeleOpBasic extends OpMode {
 
         //huskyLens.selectAlgorithm(HuskyLens.Algorithm.TAG_RECOGNITION);
 
-        int READ_PERIOD = 1;
-        rateLimit = new Deadline(READ_PERIOD, TimeUnit.SECONDS);
+        //int READ_PERIOD = 1;
+        //rateLimit = new Deadline(READ_PERIOD, TimeUnit.SECONDS);
 
-        rateLimit.expire();
+        //rateLimit.expire();
 
         /*
          * To drive forward, most robots need the motor on one side to be reversed,
@@ -124,9 +124,9 @@ public class MainTeleOpBasic extends OpMode {
          * Note: The settings here assume direct drive on left and right wheels. Gear
          * Reduction or 90 Deg drives may require direction flips
          */
-        backLeftDrive.setDirection(DcMotorSimple.Direction.FORWARD); // change accordingly
+        backLeftDrive.setDirection(DcMotorSimple.Direction.REVERSE); // change accordingly
         backRightDrive.setDirection(DcMotorSimple.Direction.FORWARD);
-        frontLeftDrive.setDirection(DcMotorSimple.Direction.FORWARD);
+        frontLeftDrive.setDirection(DcMotorSimple.Direction.REVERSE);
         frontRightDrive.setDirection(DcMotorSimple.Direction.FORWARD);
 
         /*
@@ -205,10 +205,11 @@ public class MainTeleOpBasic extends OpMode {
      */
     @Override
     public void loop() {
-        if (!rateLimit.hasExpired()) {
-            return; // might be a problem idk
-        }
-        rateLimit.reset();
+//
+//        if (!rateLimit.hasExpired()) {
+//            //return; // might be a problem idk
+//        }
+//        rateLimit.reset();
 
         //pinpoint.update();
 
@@ -266,9 +267,9 @@ public class MainTeleOpBasic extends OpMode {
 
     void macanumDrive() {
 
-        double drive  = gamepad1.left_stick_y;
-        double strafe = gamepad1.left_stick_x;
-        double rotate = gamepad1.right_stick_x;
+        double drive  = -gamepad1.left_stick_y;
+        double strafe =  gamepad1.left_stick_x;
+        double rotate =  gamepad1.right_stick_x;
 
         // get the current robot rotation for
         // field centric.
@@ -300,11 +301,20 @@ public class MainTeleOpBasic extends OpMode {
             if (max < Math.abs(speed)) max = Math.abs(speed);
         }
 
+        max = Math.max(Math.abs(speeds[0]), Math.abs(speeds[1]));
+        max = Math.max(max, Math.abs(speeds[2]));
+        max = Math.max(max, Math.abs(speeds[3]));
+
+        if (max > 1.0) {
+            speeds[0]  /= max;
+            speeds[1] /= max;
+            speeds[2]   /= max;
+            speeds[3]  /= max;
+        }
+
+
         // If and only if the maximum is outside the range we want it to be,
         // normalize all the other speeds based on the given speed value.
-        if (max > 1) {
-            for (int i = 0; i < speeds.length; i++) speeds[i] /= max;
-        }
 
         // apply the calculated values to the motors.
         frontLeftDrive.setPower(speeds[0]);
