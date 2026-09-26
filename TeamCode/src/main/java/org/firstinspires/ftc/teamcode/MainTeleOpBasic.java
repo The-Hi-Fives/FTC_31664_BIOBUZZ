@@ -19,6 +19,7 @@ import org.firstinspires.ftc.robotcore.internal.system.Deadline;
 
 import java.util.concurrent.TimeUnit;
 
+// ** connect to the driver hub wirelessly with "adb connect 192.168.43.1:5555"
 
 /*
  * This file includes a teleop (driver-controlled) file for the goBILDA® StarterBot for the
