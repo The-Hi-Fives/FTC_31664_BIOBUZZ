@@ -15,9 +15,6 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 //import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 //import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 //import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
-import org.firstinspires.ftc.robotcore.internal.system.Deadline;
-
-import java.util.concurrent.TimeUnit;
 
 // ** connect to the driver hub wirelessly with "adb connect 192.168.43.1:5555"
 
@@ -67,8 +64,8 @@ public class MainTeleOpBasic extends OpMode {
      * in the launch() function to only run the windmill servo when the motor is spinning fast
      * enough to make a successful throw.
      */
-    public final int LAUNCHER_TARGET_VELOCITY = 1300;
-    public final int LAUNCHER_MIN_VELOCITY = 1250;
+    public final int LAUNCHER_TARGET_VELOCITY = 1325;
+    public final int LAUNCHER_MIN_VELOCITY = 1275;
 
     /*
      * These two variables store the power we need to apply to the motors. In other cases, we may
@@ -264,6 +261,7 @@ public class MainTeleOpBasic extends OpMode {
     @Override
     public void stop() {
         telemetry.addLine("Bro WHY did you STOP??!??");
+        telemetry.update();
     }
 
     void macanumDrive() {
@@ -291,8 +289,8 @@ public class MainTeleOpBasic extends OpMode {
         double sinAngle = Math.sin((Math.PI / 2) - heading);
 
         // Adjust the strafe and drive accordingly
-        double globalStrafe = -drive * sinAngle * strafe * cosAngle;
-        double globalDrive  = drive * cosAngle * strafe * sinAngle;
+        double globalStrafe = drive * cosAngle + strafe * sinAngle;
+        double globalDrive  = drive * cosAngle - strafe * sinAngle;
 
         // get the speeds for all the motors.
         double[] speeds = {
