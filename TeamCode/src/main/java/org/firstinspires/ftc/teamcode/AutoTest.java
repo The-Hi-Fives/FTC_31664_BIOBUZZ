@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.atan2;
+import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -17,16 +17,17 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.robotcore.external.navigation.Rotation;
 
 
 @Autonomous(name = "Auto Test", group = "StarterBot")
 @Disabled
 public class AutoTest extends LinearOpMode {
 
-    private DcMotor backLeftDrive;
-    private DcMotor backRightDrive;
-    private DcMotor frontLeftDrive;
-    private DcMotor frontRightDrive;
+    private DcMotorEx backLeftDrive;
+    private DcMotorEx backRightDrive;
+    private DcMotorEx frontLeftDrive;
+    private DcMotorEx frontRightDrive;
 
     private DcMotorEx launcher;
     private DcMotor intake;
@@ -35,13 +36,15 @@ public class AutoTest extends LinearOpMode {
     private CRServo rightIntakeServo;
     private CRServo windmillServo;
 
+    double currentRotation = 0; // in degrees
+
     @Override
     public void runOpMode() throws InterruptedException {
 
-        backLeftDrive    = hardwareMap.get(DcMotor.class, "back_left_drive");
-        backRightDrive   = hardwareMap.get(DcMotor.class, "back_right_drive");
-        frontLeftDrive   = hardwareMap.get(DcMotor.class, "front_left_drive");
-        frontRightDrive  = hardwareMap.get(DcMotor.class, "front_right_drive");
+        backLeftDrive    = hardwareMap.get(DcMotorEx.class, "back_left_drive");
+        backRightDrive   = hardwareMap.get(DcMotorEx.class, "back_right_drive");
+        frontLeftDrive   = hardwareMap.get(DcMotorEx.class, "front_left_drive");
+        frontRightDrive  = hardwareMap.get(DcMotorEx.class, "front_right_drive");
         intake           = hardwareMap.get(DcMotor.class, "intake");
         launcher         = hardwareMap.get(DcMotorEx.class, "launcher");
 
@@ -60,30 +63,49 @@ public class AutoTest extends LinearOpMode {
         frontRightDrive.setZeroPowerBehavior(BRAKE);
         intake.setZeroPowerBehavior(BRAKE);
 
-        moveRobotTo(10,10,100);
+        moveRobotTo(10,10,1000);
 
-
+        moveRobotTo(12,12,1000);
 
     }
 
-    void moveRobotTo(double TargetX,double TargetY,double Speed) { // in inches and rpm
-        Pose2D TargetPosition = new Pose2D(DistanceUnit.INCH,TargetX,TargetY,AngleUnit.DEGREES,0);
-        Pose2D CurrentPosition = new Pose2D(DistanceUnit.INCH,0,0,AngleUnit.DEGREES,0);
-        double directionX = 0;
-        double directionY = 0;
-        while (abs(TargetPosition.getX(DistanceUnit.INCH) - CurrentPosition.getX(DistanceUnit.INCH)) > 1.0) {
-            sleep(33);
-            double dx = TargetPosition.getX(DistanceUnit.INCH) - CurrentPosition.getX(DistanceUnit.INCH);
-            double dy = TargetPosition.getY(DistanceUnit.INCH) - CurrentPosition.getY(DistanceUnit.INCH);
+    Pose2D getRobotPose() {
+        return new Pose2D(DistanceUnit.INCH,0,0,AngleUnit.DEGREES,0); // set up later
+    }
 
-            double L = sqrt(dx * dx + dy * dy);
+    double getDistanceBetweenPoints(Pose2D a, Pose2D b, DistanceUnit distanceUnit){
+        return sqrt(pow(b.getX(distanceUnit) - a.getX(distanceUnit),2) + pow(b.getY(distanceUnit) - a.getY(distanceUnit),2));
+    }
 
-            directionX = dx/L;
-            directionY = dy/L;
+    void moveRobotTo(double TargetX,double TargetY,double speed) { // in inches and rpm
 
-            macanumDrive(directionY,directionX,0);
+        Pose2D TargetPose = new Pose2D(DistanceUnit.INCH,TargetX,TargetY,AngleUnit.DEGREES,0);
+        Pose2D CurrentPose = getRobotPose();
+
+        double directionX;
+        double directionY;
+
+        while (getDistanceBetweenPoints(TargetPose,CurrentPose,DistanceUnit.INCH) > 1.0) {
+            sleep(33); // Wait 1/30 of a second
+
+            double dx = TargetPose.getX(DistanceUnit.INCH) - TargetPose.getX(DistanceUnit.INCH);
+            double dy = TargetPose.getY(DistanceUnit.INCH) - TargetPose.getY(DistanceUnit.INCH);
+
+            double L = sqrt(pow(dx,2) + pow(dy,2));
+
+            directionX = (dx/L);
+            directionY = (dy/L);
+
+            double rotate = CurrentPose.getHeading(AngleUnit.DEGREES) - currentRotation;
+
+            macanumDrive(directionY * speed,directionX * speed,rotate * speed);
+
+            CurrentPose = getRobotPose();
+
         }
+
         macanumDrive(0,0,0);
+
     }
 
     void macanumDrive(double forward, double sideways, double rotate) {
@@ -124,10 +146,10 @@ public class AutoTest extends LinearOpMode {
         max = Math.max(max, Math.abs(speeds[3]));
 
         if (max > 1.0) {
-            speeds[0]  /= max;
-            speeds[1] /= max;
+            speeds[0]   /= max;
+            speeds[1]   /= max;
             speeds[2]   /= max;
-            speeds[3]  /= max;
+            speeds[3]   /= max;
         }
 
 
@@ -135,10 +157,10 @@ public class AutoTest extends LinearOpMode {
         // normalize all the other speeds based on the given speed value.
 
         // apply the calculated values to the motors.
-        frontLeftDrive.setPower(speeds[0]);
-        frontRightDrive.setPower(speeds[1]);
-        backLeftDrive.setPower(speeds[2]);
-        backRightDrive.setPower(speeds[3]);
+        frontLeftDrive.setVelocity(speeds[0]);
+        frontRightDrive.setVelocity(speeds[1]);
+        backLeftDrive.setVelocity(speeds[2]);
+        backRightDrive.setVelocity(speeds[3]);
     }
 
     void setRobotHeading(double heading,double speed) { // in degrees and rpm
