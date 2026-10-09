@@ -17,11 +17,12 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
-import org.firstinspires.ftc.robotcore.external.navigation.Rotation;
 
 
 @Autonomous(name = "Auto Test", group = "StarterBot")
-@Disabled
+
+@Disabled // comment out later!
+
 public class AutoTest extends LinearOpMode {
 
     private DcMotorEx backLeftDrive;
@@ -36,7 +37,12 @@ public class AutoTest extends LinearOpMode {
     private CRServo rightIntakeServo;
     private CRServo windmillServo;
 
-    double currentRotation = 0; // in degrees
+    double targetHeading = 0; // in degrees
+
+    public final int LAUNCHER_TARGET_VELOCITY = 1325;
+    public final int LAUNCHER_MINIMUM_VELOCITY = 1275;
+
+    public final int ROTATION_VELOCITY = 400;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -56,6 +62,7 @@ public class AutoTest extends LinearOpMode {
         backRightDrive.setDirection(DcMotorSimple.Direction.FORWARD);
         frontLeftDrive.setDirection(DcMotorSimple.Direction.REVERSE);
         frontRightDrive.setDirection(DcMotorSimple.Direction.FORWARD);
+        rightIntakeServo.setDirection(DcMotorSimple.Direction.REVERSE);
 
         backLeftDrive.setZeroPowerBehavior(BRAKE);
         backRightDrive.setZeroPowerBehavior(BRAKE);
@@ -63,9 +70,17 @@ public class AutoTest extends LinearOpMode {
         frontRightDrive.setZeroPowerBehavior(BRAKE);
         intake.setZeroPowerBehavior(BRAKE);
 
+        // Sequence Code
+
         moveRobotTo(10,10,1000);
 
         moveRobotTo(12,12,1000);
+
+        launch();
+
+        setIntake(true);
+        moveRobotTo(10,10,1000);
+        setIntake(false);
 
     }
 
@@ -96,7 +111,7 @@ public class AutoTest extends LinearOpMode {
             directionX = (dx/L);
             directionY = (dy/L);
 
-            double rotate = CurrentPose.getHeading(AngleUnit.DEGREES) - currentRotation;
+            double rotate = CurrentPose.getHeading(AngleUnit.DEGREES) - targetHeading;
 
             macanumDrive(directionY * speed,directionX * speed,rotate * speed);
 
@@ -109,6 +124,7 @@ public class AutoTest extends LinearOpMode {
     }
 
     void macanumDrive(double forward, double sideways, double rotate) {
+
         // Assign the input values to the variables
 
         // get the current robot rotation for
@@ -161,10 +177,53 @@ public class AutoTest extends LinearOpMode {
         frontRightDrive.setVelocity(speeds[1]);
         backLeftDrive.setVelocity(speeds[2]);
         backRightDrive.setVelocity(speeds[3]);
+
+    }
+
+    void launch() {
+
+        launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
+
+        while (launcher.getVelocity() <= LAUNCHER_MINIMUM_VELOCITY) {
+            sleep(33);
+        }
+
+        double recordedVelocity = launcher.getVelocity();
+
+        windmillServo.setPower(1);
+
+        while (recordedVelocity - launcher.getVelocity() > 200) {
+            sleep(33);
+        }
+
+        sleep(200);
+
+        launcher.setVelocity(0);
+        windmillServo.setPower(0);
+
+    }
+
+    void setIntake(boolean isIntaking) {
+
+        double intakeSpeed = isIntaking ? 1.0 : 0.0; // ternary operator (do not question)
+
+        intake.setPower(intakeSpeed);
+        leftIntakeServo.setPower(intakeSpeed);
+        rightIntakeServo.setPower(intakeSpeed);
+
     }
 
     void setRobotHeading(double heading,double speed) { // in degrees and rpm
 
-    }
+        targetHeading = heading;
+        double currentHeading = getRobotPose().getHeading(AngleUnit.DEGREES);
 
+        while (abs(currentHeading - targetHeading) > 10) {
+            sleep(33);
+            macanumDrive(0,0,currentHeading - targetHeading * ROTATION_VELOCITY);
+        }
+
+        macanumDrive(0,0,0);
+
+    }
 }
