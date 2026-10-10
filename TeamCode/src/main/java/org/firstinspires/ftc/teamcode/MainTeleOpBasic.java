@@ -64,8 +64,20 @@ public class MainTeleOpBasic extends OpMode {
      * in the launch() function to only run the windmill servo when the motor is spinning fast
      * enough to make a successful throw.
      */
-    public final int LAUNCHER_TARGET_VELOCITY = 1325;
-    public final int LAUNCHER_MIN_VELOCITY = 1275;
+    enum BALL_TYPE {
+        NECTAR,
+        POLLEN
+    }
+
+    BALL_TYPE ballType = BALL_TYPE.POLLEN;
+
+    // Nectar
+    public final int NECTAR_LAUNCHER_TARGET_VELOCITY = 1635;
+    public final int NECTAR_LAUNCHER_MIN_VELOCITY = 1600;
+
+    // Pollen
+    public final int POLLEN_LAUNCHER_TARGET_VELOCITY = 1285;
+    public final int POLLEN_LAUNCHER_MIN_VELOCITY = 1250;
 
     /*
      * These two variables store the power we need to apply to the motors. In other cases, we may
@@ -75,6 +87,8 @@ public class MainTeleOpBasic extends OpMode {
 
     // Create a variable to set to the intake.
     double intakePower;
+
+    boolean toggleDown = false;
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -203,6 +217,8 @@ public class MainTeleOpBasic extends OpMode {
      */
     @Override
     public void loop() {
+
+        telemetry.addData("STATE:", ballType);
 //
 //        if (!rateLimit.hasExpired()) {
 //            //return; // might be a problem idk
@@ -251,6 +267,10 @@ public class MainTeleOpBasic extends OpMode {
          */
         telemetry.addData("Left Motors", "back (%.2f), front (%.2f)", backLeftDrive.getPower(), frontLeftDrive.getPower());
         telemetry.addData("Right Motors", "back (%.2f), front (%.2f)", backRightDrive.getPower(), frontRightDrive.getPower());
+
+        telemetry.addData("Launcher Velocity",launcher.getVelocity());
+        telemetry.addData("TARGET VELOCITY",(ballType == BALL_TYPE.POLLEN) ? POLLEN_LAUNCHER_TARGET_VELOCITY : NECTAR_LAUNCHER_TARGET_VELOCITY);
+
         telemetry.addLine();
 
     }
@@ -362,12 +382,6 @@ public class MainTeleOpBasic extends OpMode {
          * holding down the right gamepad. If they are, then we want to start spinning up the launcher.
          * Otherwise, we start spinning the launcher down.
          */
-        if (gamepad1.right_bumper) {
-            launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
-        } else {
-            launcher.setVelocity(0);
-        }
-
         /*
          * Here we ask if the driver is currently pressing the right bumper, AND the launcher is
          * spinning fast enough to make a successful shot. If it is, then we will turn on the
@@ -375,12 +389,57 @@ public class MainTeleOpBasic extends OpMode {
          * add some power to the intake power. This can sometimes help dislodge stuck elements from
          * inside the hopper.
          */
-        if (gamepad1.right_bumper && launcher.getVelocity() > LAUNCHER_MIN_VELOCITY) {
-            windmillServo.setPower(1);
-            intakePower += 0.5;
-        } else {
-            windmillServo.setPower(0);
+
+
+
+        if (gamepad1.a && !toggleDown) {
+            toggleDown = true;
+            if (ballType == BALL_TYPE.NECTAR) {
+                ballType = BALL_TYPE.POLLEN;
+            } else {
+                ballType = BALL_TYPE.NECTAR;
+            }
+        } else if (!gamepad1.a) {
+            toggleDown = false;
+        }
+
+
+        switch (ballType) {
+            case NECTAR:
+                if (gamepad1.right_bumper) {
+                    launcher.setVelocity(NECTAR_LAUNCHER_TARGET_VELOCITY);
+                } else {
+                    launcher.setVelocity(0);
+                }
+
+                if (gamepad1.right_bumper && launcher.getVelocity() > NECTAR_LAUNCHER_MIN_VELOCITY) {
+                    windmillServo.setPower(1);
+                    intakePower += 0.5;
+                } else {
+                    windmillServo.setPower(0);
+                }
+                break;
+            case POLLEN:
+                if (gamepad1.right_bumper) {
+                    launcher.setVelocity(POLLEN_LAUNCHER_TARGET_VELOCITY);
+                } else {
+                    launcher.setVelocity(0);
+                }
+
+                if (gamepad1.right_bumper && launcher.getVelocity() > POLLEN_LAUNCHER_MIN_VELOCITY) {
+                    windmillServo.setPower(1);
+                    intakePower += 0.5;
+                } else {
+                    windmillServo.setPower(0);
+                }
+                break;
+        }
+        if (gamepad1.left_bumper) {
+            windmillServo.setPower(-1);
         }
     }
+
+
+
 
 }
