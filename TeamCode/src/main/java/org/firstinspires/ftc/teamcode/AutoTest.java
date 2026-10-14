@@ -6,6 +6,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 
+import com.qualcomm.hardware.dfrobot.HuskyLens;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -36,6 +37,8 @@ public class AutoTest extends LinearOpMode {
     private CRServo leftIntakeServo;
     private CRServo rightIntakeServo;
     private CRServo windmillServo;
+
+    private HuskyLens huskylens;
 
     double targetHeading = 0; // in degrees
 

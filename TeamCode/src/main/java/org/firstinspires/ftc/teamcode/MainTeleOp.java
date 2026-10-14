@@ -312,24 +312,26 @@ public class MainTeleOp extends OpMode {
         backRightDrive.setPower(speeds[3]);
     }
 
-    int[] getAprilTagID() {
+    int[] getAprilTagIDs() {
 
         HuskyLens.Block[] blocks = huskyLens.blocks();
 
+        // If there are no visible AprilTags then return an empty array.
         if (blocks == null) {
             telemetry.addData("Block count", 0);
             return new int[0];
         }
 
+        // Make a new array with the AprilTag IDs.
         int[] blockIDs = new int[blocks.length];
         telemetry.addData("Block count", blocks.length);
 
+        // Loop through the blocks to get all the IDs.
         for (int i = 0; i < blocks.length; i++) {
             telemetry.addData("Block", blocks[i].toString());
             blockIDs[i] = blocks[i].id;
         }
         return blockIDs;
-
     }
 
     void launch() {
