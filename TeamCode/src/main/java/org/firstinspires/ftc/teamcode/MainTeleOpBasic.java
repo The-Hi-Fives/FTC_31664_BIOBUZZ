@@ -389,20 +389,18 @@ public class MainTeleOpBasic extends OpMode {
          * add some power to the intake power. This can sometimes help dislodge stuck elements from
          * inside the hopper.
          */
-
-
-
-        if (gamepad1.a && !toggleDown) {
+        // Pollen and Nectar Toggle
+        boolean toggleButton = gamepad1.a;
+        if (toggleButton && !toggleDown) {
             toggleDown = true;
             if (ballType == BALL_TYPE.NECTAR) {
                 ballType = BALL_TYPE.POLLEN;
             } else {
                 ballType = BALL_TYPE.NECTAR;
             }
-        } else if (!gamepad1.a) {
+        } else if (!toggleButton) {
             toggleDown = false;
         }
-
 
         switch (ballType) {
             case NECTAR:
@@ -438,8 +436,4 @@ public class MainTeleOpBasic extends OpMode {
             windmillServo.setPower(-1);
         }
     }
-
-
-
-
 }

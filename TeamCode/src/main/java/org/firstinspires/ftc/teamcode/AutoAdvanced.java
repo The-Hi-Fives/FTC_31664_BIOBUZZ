@@ -19,12 +19,15 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
+import java.util.Arrays;
+import java.util.stream.IntStream;
+
 
 @Autonomous(name = "Auto Test", group = "StarterBot")
 
 @Disabled // comment out later!
 
-public class AutoTest extends LinearOpMode {
+public class AutoAdvanced extends LinearOpMode {
 
     private DcMotorEx backLeftDrive;
     private DcMotorEx backRightDrive;
@@ -46,6 +49,8 @@ public class AutoTest extends LinearOpMode {
     public final int LAUNCHER_MINIMUM_VELOCITY = 1275;
 
     public final int ROTATION_VELOCITY = 400;
+
+    boolean is_alliance_red = false;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -87,6 +92,52 @@ public class AutoTest extends LinearOpMode {
 
     }
 
+    int[] getAprilTagIDs() {
+
+        HuskyLens.Block[] blocks = huskylens.blocks();
+
+        // If there are no visible AprilTags then return an empty array.
+        if (blocks == null) {
+            telemetry.addData("Block count", 0);
+            return new int[0];
+        }
+
+        // Make a new array with the AprilTag IDs.
+        int[] blockIDs = new int[blocks.length];
+        telemetry.addData("Block count", blocks.length);
+
+        // Loop through the blocks to get all the IDs.
+        for (int i = 0; i < blocks.length; i++) {
+            telemetry.addData("Block", blocks[i].toString());
+            blockIDs[i] = blocks[i].id;
+        }
+        return blockIDs;
+    }
+
+    boolean isHiveReady() { // check if you can see the AprilTags on the hive
+
+        int[] blockIDs = getAprilTagIDs();
+
+        int verifiedBlocks = 0;
+
+        IntStream streamedArray = Arrays.stream(blockIDs);
+
+        // loop through the alliances AprilTags
+        for (int i = is_alliance_red ? 1 : 9; i <= (is_alliance_red ? 8 : 16); i++) {
+            if (streamedArrayHas(streamedArray,i)) {
+                verifiedBlocks++;
+            }
+        }
+
+        // if most of the blocks are there, then return true, otherwise false.
+        return verifiedBlocks > 3;
+
+    }
+
+    boolean streamedArrayHas(IntStream streamedArray, int value) {
+        return streamedArray.anyMatch(x -> x == value);
+    }
+
     Pose2D getRobotPose() {
         return new Pose2D(DistanceUnit.INCH,0,0,AngleUnit.DEGREES,0); // set up later
     }
@@ -109,10 +160,11 @@ public class AutoTest extends LinearOpMode {
             double dx = TargetPose.getX(DistanceUnit.INCH) - TargetPose.getX(DistanceUnit.INCH);
             double dy = TargetPose.getY(DistanceUnit.INCH) - TargetPose.getY(DistanceUnit.INCH);
 
-            double L = sqrt(pow(dx,2) + pow(dy,2));
+            // normalize the direction
+            double l = sqrt(pow(dx,2) + pow(dy,2));
 
-            directionX = (dx/L);
-            directionY = (dy/L);
+            directionX = (dx/l);
+            directionY = (dy/l);
 
             double rotate = CurrentPose.getHeading(AngleUnit.DEGREES) - targetHeading;
 
@@ -183,7 +235,23 @@ public class AutoTest extends LinearOpMode {
 
     }
 
-    void launch() {
+    boolean launch() {
+
+        boolean hiveReady = isHiveReady();
+
+        for (int i = 0; i <= 60; i++) {
+            sleep(33);
+            if (hiveReady) {
+                break;
+            } else {
+                hiveReady = isHiveReady();
+            }
+            //idle();
+        }
+
+        if (!hiveReady) {
+            return false;
+        }
 
         launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
 
@@ -203,6 +271,8 @@ public class AutoTest extends LinearOpMode {
 
         launcher.setVelocity(0);
         windmillServo.setPower(0);
+
+        return true;
 
     }
 
