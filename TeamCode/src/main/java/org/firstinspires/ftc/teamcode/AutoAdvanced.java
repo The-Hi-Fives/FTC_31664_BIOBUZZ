@@ -7,6 +7,7 @@ import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 
 import com.qualcomm.hardware.dfrobot.HuskyLens;
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -14,6 +15,7 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -43,6 +45,9 @@ public class AutoAdvanced extends LinearOpMode {
 
     private HuskyLens huskylens;
 
+    private GoBildaPinpointDriver pinpoint;
+
+
     double targetHeading = 0; // in degrees
 
     public final int LAUNCHER_TARGET_VELOCITY = 1325;
@@ -51,6 +56,8 @@ public class AutoAdvanced extends LinearOpMode {
     public final int ROTATION_VELOCITY = 400;
 
     boolean is_alliance_red = false;
+
+    private ElapsedTime runtime = new ElapsedTime();
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -78,11 +85,23 @@ public class AutoAdvanced extends LinearOpMode {
         frontRightDrive.setZeroPowerBehavior(BRAKE);
         intake.setZeroPowerBehavior(BRAKE);
 
+        pinpoint.resetPosAndIMU();
+
+        runtime.reset(); // reset the time so it starts at 0.
+
         // Sequence Code
 
         moveRobotTo(10,10,1000);
 
         moveRobotTo(12,12,1000);
+
+        if (launch()) {
+            moveRobotTo(10,10,1000);
+
+        } else {
+            moveRobotTo(10,10,1000);
+
+        }
 
         launch();
 
@@ -157,7 +176,7 @@ public class AutoAdvanced extends LinearOpMode {
         while (getDistanceBetweenPoints(TargetPose,CurrentPose,DistanceUnit.INCH) > 1.0) {
             sleep(33); // Wait 1/30 of a second
 
-            double dx = TargetPose.getX(DistanceUnit.INCH) - TargetPose.getX(DistanceUnit.INCH);
+            double dx = (TargetPose.getX(DistanceUnit.INCH) - TargetPose.getX(DistanceUnit.INCH));
             double dy = TargetPose.getY(DistanceUnit.INCH) - TargetPose.getY(DistanceUnit.INCH);
 
             // normalize the direction
