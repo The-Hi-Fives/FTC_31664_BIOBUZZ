@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.dfrobot.HuskyLens;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -20,6 +21,7 @@ public class RobotEngine {
     public CRServo windmillServo;
 
     public HuskyLens huskyLens;
+    public Limelight3A limelight;
     public GoBildaPinpointDriver pinpoint;
 
     public void init(HardwareMap hardMap) {
@@ -51,6 +53,16 @@ public class RobotEngine {
         windmillServo    = hardMap.get(CRServo.class, "windmill");
         leftIntakeServo  = hardMap.get(CRServo.class, "left_intake_servo");
         rightIntakeServo = hardMap.get(CRServo.class, "right_intake_servo");
+
+        //limelight.pipelineSwitch(0);
+
+        //limelight.start();
+
+        //pinpoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+        //pinpoint.setOffsets();
+        //pinpoint.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD,GoBildaPinpointDriver.EncoderDirection.FORWARD);
+
+        //pinpoint.resetPosAndIMU();
 
     }
 
