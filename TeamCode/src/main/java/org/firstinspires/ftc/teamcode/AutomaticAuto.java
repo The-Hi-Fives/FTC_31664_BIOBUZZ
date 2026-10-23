@@ -314,10 +314,6 @@ public class AutomaticAuto extends LinearOpMode {
             if (max < Math.abs(speed)) max = Math.abs(speed);
         }
 
-        max = Math.max(Math.abs(speeds[0]), Math.abs(speeds[1]));
-        max = Math.max(max, Math.abs(speeds[2]));
-        max = Math.max(max, Math.abs(speeds[3]));
-
         if (max > 1.0) {
             speeds[0]   /= max;
             speeds[1]   /= max;

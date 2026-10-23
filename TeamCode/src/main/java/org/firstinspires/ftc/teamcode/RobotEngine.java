@@ -1,14 +1,24 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.hardware.input.InputManager;
+
 import com.qualcomm.hardware.dfrobot.HuskyLens;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.ImuOrientationOnRobot;
 
 public class RobotEngine {
+
+    enum BALL_TYPE {
+        NECTAR,
+        POLLEN
+    }
     public DcMotorEx backLeftDrive;
     public DcMotorEx backRightDrive;
     public DcMotorEx frontLeftDrive;
@@ -22,8 +32,16 @@ public class RobotEngine {
 
     public HuskyLens huskyLens;
     public Limelight3A limelight;
+    public IMU imu;
     public GoBildaPinpointDriver pinpoint;
 
+    // Nectar
+    public final int NECTAR_LAUNCHER_TARGET_VELOCITY = 1635;
+    public final int NECTAR_LAUNCHER_MIN_VELOCITY = 1600;
+
+    // Pollen
+    public final int POLLEN_LAUNCHER_TARGET_VELOCITY = 1285;
+    public final int POLLEN_LAUNCHER_MIN_VELOCITY = 1250;
     public void init(HardwareMap hardMap) {
 
         // define and init motors
@@ -63,6 +81,8 @@ public class RobotEngine {
         //pinpoint.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD,GoBildaPinpointDriver.EncoderDirection.FORWARD);
 
         //pinpoint.resetPosAndIMU();
+
+        imu.resetYaw();
 
     }
 
@@ -118,5 +138,21 @@ public class RobotEngine {
         frontRightDrive.setPower(speeds[1]);
         backLeftDrive.setPower(speeds[2]);
         backRightDrive.setPower(speeds[3]);
+    }
+
+    void launch_auto(LinearOpMode opmode, BALL_TYPE ball_type) {
+
+        int target_velocity = ball_type.equals(BALL_TYPE.NECTAR) ? NECTAR_LAUNCHER_TARGET_VELOCITY : POLLEN_LAUNCHER_TARGET_VELOCITY;
+        int minimum_velocity = ball_type.equals(BALL_TYPE.NECTAR) ? NECTAR_LAUNCHER_MIN_VELOCITY : POLLEN_LAUNCHER_MIN_VELOCITY;
+
+        launcher.setVelocity(target_velocity);
+
+        while (opmode.opModeIsActive() && launcher.getVelocity() > minimum_velocity) {
+            opmode.idle();
+        }
+
+        windmillServo.setPower(1);
+
+        opmode.sleep(1000);
     }
 }
