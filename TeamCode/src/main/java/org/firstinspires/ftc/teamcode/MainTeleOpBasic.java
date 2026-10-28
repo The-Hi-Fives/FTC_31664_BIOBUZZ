@@ -72,12 +72,12 @@ public class MainTeleOpBasic extends OpMode {
     BALL_TYPE ballType = BALL_TYPE.POLLEN;
 
     // Nectar
-    public final int NECTAR_LAUNCHER_TARGET_VELOCITY = 1635;
-    public final int NECTAR_LAUNCHER_MIN_VELOCITY = 1600;
+    public final int NECTAR_LAUNCHER_TARGET_VELOCITY = 1425;
+    public final int NECTAR_LAUNCHER_MIN_VELOCITY = 1300;
 
     // Pollen
-    public final int POLLEN_LAUNCHER_TARGET_VELOCITY = 1285;
-    public final int POLLEN_LAUNCHER_MIN_VELOCITY = 1250;
+    public final int POLLEN_LAUNCHER_TARGET_VELOCITY = 1100;
+    public final int POLLEN_LAUNCHER_MIN_VELOCITY = 975;
 
     /*
      * These two variables store the power we need to apply to the motors. In other cases, we may
@@ -410,7 +410,7 @@ public class MainTeleOpBasic extends OpMode {
                     launcher.setVelocity(0);
                 }
 
-                if (gamepad1.right_bumper && launcher.getVelocity() > NECTAR_LAUNCHER_MIN_VELOCITY) {
+                if (gamepad1.right_bumper && launcher.getVelocity() >= NECTAR_LAUNCHER_MIN_VELOCITY) {
                     windmillServo.setPower(1);
                     intakePower += 0.5;
                 } else {
@@ -424,7 +424,7 @@ public class MainTeleOpBasic extends OpMode {
                     launcher.setVelocity(0);
                 }
 
-                if (gamepad1.right_bumper && launcher.getVelocity() > POLLEN_LAUNCHER_MIN_VELOCITY) {
+                if (gamepad1.right_bumper && launcher.getVelocity() >= POLLEN_LAUNCHER_MIN_VELOCITY) {
                     windmillServo.setPower(1);
                     intakePower += 0.5;
                 } else {

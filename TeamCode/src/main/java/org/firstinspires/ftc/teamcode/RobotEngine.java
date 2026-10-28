@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.ImuOrientationOnRobot;
@@ -36,12 +37,12 @@ public class RobotEngine {
     public GoBildaPinpointDriver pinpoint;
 
     // Nectar
-    public final int NECTAR_LAUNCHER_TARGET_VELOCITY = 1635;
-    public final int NECTAR_LAUNCHER_MIN_VELOCITY = 1600;
+    public final int NECTAR_LAUNCHER_TARGET_VELOCITY = 1425;
+    public final int NECTAR_LAUNCHER_MIN_VELOCITY = 1300;
 
     // Pollen
-    public final int POLLEN_LAUNCHER_TARGET_VELOCITY = 1285;
-    public final int POLLEN_LAUNCHER_MIN_VELOCITY = 1250;
+    public final int POLLEN_LAUNCHER_TARGET_VELOCITY = 1100;
+    public final int POLLEN_LAUNCHER_MIN_VELOCITY = 975;
     public void init(HardwareMap hardMap) {
 
         // define and init motors
@@ -52,8 +53,8 @@ public class RobotEngine {
         intake           = hardMap.get(DcMotor.class, "intake");
         launcher         = hardMap.get(DcMotorEx.class, "launcher");
 
-        //pinpoint         = hard_map.get(GoBildaPinpointDriver.class,"pinpoint");
-        //huskyLens        = hard_map.get(HuskyLens.class, "huskylens");
+        //pinpoint         = hardMap.get(GoBildaPinpointDriver.class,"pinpoint");
+        //huskyLens        = hardMap.get(HuskyLens.class, "huskylens");
 
         // reset motor velocity
         frontLeftDrive.setVelocity(0);
@@ -66,6 +67,12 @@ public class RobotEngine {
         frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        // set the direction of all macanum motors
+        backLeftDrive.setDirection(DcMotorSimple.Direction.REVERSE);
+        backRightDrive.setDirection(DcMotorSimple.Direction.FORWARD);
+        frontLeftDrive.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontRightDrive.setDirection(DcMotorSimple.Direction.FORWARD);
 
         // define and init servos
         windmillServo    = hardMap.get(CRServo.class, "windmill");
@@ -82,16 +89,11 @@ public class RobotEngine {
 
         //pinpoint.resetPosAndIMU();
 
-        imu.resetYaw();
+        //imu.resetYaw();
 
     }
 
     public void macanumDrive(double drive, double strafe, double rotate, double speed) {
-
-        // multiply input values by speed.
-        drive *= speed;
-        strafe *= speed;
-        rotate *= speed;
 
         // get the current robot rotation for
         // field centric.
@@ -123,36 +125,73 @@ public class RobotEngine {
             if (max < Math.abs(currentSpeed)) max = Math.abs(currentSpeed);
         }
 
-        for (int i = 0; i <= 3; i++) {
-            if (max > 1.0) {
-                speeds[i] /= max;
-            }
-            speeds[i] *= speed;
+        //max = Math.max(Math.abs(speeds[0]), Math.abs(speeds[1]));
+        //max = Math.max(max, Math.abs(speeds[2]));
+        //max = Math.max(max, Math.abs(speeds[3]));
+
+        if (max > 1.0) {
+            speeds[0]  /= max;
+            speeds[1] /= max;
+            speeds[2]   /= max;
+            speeds[3]  /= max;
         }
 
         // If and only if the maximum is outside the range we want it to be,
         // normalize all the other speeds based on the given speed value.
 
         // apply the calculated values to the motors.
-        frontLeftDrive.setVelocity(speeds[0]);
-        frontRightDrive.setPower(speeds[1]);
-        backLeftDrive.setPower(speeds[2]);
-        backRightDrive.setPower(speeds[3]);
+        frontLeftDrive.setVelocity(speeds[0] * speed);
+        frontRightDrive.setVelocity(speeds[1] * speed);
+        backLeftDrive.setVelocity(speeds[2] * speed);
+        backRightDrive.setVelocity(speeds[3] * speed);
+
     }
 
-    void launch_auto(LinearOpMode opmode, BALL_TYPE ball_type) {
+    public void launchTeleOp(boolean launch_button, BALL_TYPE ball_type) { // run every frame
 
+        // get the target and minimum velocity.
+        int target_velocity = (ball_type == BALL_TYPE.NECTAR) ? NECTAR_LAUNCHER_TARGET_VELOCITY : POLLEN_LAUNCHER_TARGET_VELOCITY;
+        int minimum_velocity = (ball_type == BALL_TYPE.NECTAR) ? NECTAR_LAUNCHER_MIN_VELOCITY : POLLEN_LAUNCHER_MIN_VELOCITY;
+
+        // start the motor if the launch button is down.
+        if (launch_button) {
+            launcher.setVelocity(target_velocity);
+        } else {
+            launcher.setVelocity(0);
+        }
+
+        // wait until the velocity is higher than the minimum velocity, then start the windmill.
+        if (launch_button && launcher.getVelocity() > minimum_velocity) {
+            windmillServo.setPower(1);
+        } else {
+            windmillServo.setPower(0);
+        }
+
+    }
+
+    public void launchAuto(LinearOpMode opmode, BALL_TYPE ball_type) {
+
+        // get the target and minimum velocities.
         int target_velocity = ball_type.equals(BALL_TYPE.NECTAR) ? NECTAR_LAUNCHER_TARGET_VELOCITY : POLLEN_LAUNCHER_TARGET_VELOCITY;
         int minimum_velocity = ball_type.equals(BALL_TYPE.NECTAR) ? NECTAR_LAUNCHER_MIN_VELOCITY : POLLEN_LAUNCHER_MIN_VELOCITY;
 
+        // set the velocity
         launcher.setVelocity(target_velocity);
 
+        // wait until the velocity is larger then the minimum velocity
         while (opmode.opModeIsActive() && launcher.getVelocity() > minimum_velocity) {
             opmode.idle();
         }
 
+        // turn on the windmill servo.
         windmillServo.setPower(1);
 
+        // wait a second
         opmode.sleep(1000);
+
+        // stop everything
+        windmillServo.setPower(0);
+        launcher.setVelocity(0);
+
     }
 }
