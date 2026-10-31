@@ -6,6 +6,7 @@ import com.qualcomm.hardware.dfrobot.HuskyLens;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -13,6 +14,9 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.ImuOrientationOnRobot;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 
 public class RobotEngine {
 
@@ -68,6 +72,11 @@ public class RobotEngine {
         backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+        frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         // set the direction of all macanum motors
         backLeftDrive.setDirection(DcMotorSimple.Direction.REVERSE);
         backRightDrive.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -78,6 +87,10 @@ public class RobotEngine {
         windmillServo    = hardMap.get(CRServo.class, "windmill");
         leftIntakeServo  = hardMap.get(CRServo.class, "left_intake_servo");
         rightIntakeServo = hardMap.get(CRServo.class, "right_intake_servo");
+
+        // set the direction of all the servos
+        rightIntakeServo.setDirection(DcMotorSimple.Direction.REVERSE);
+        windmillServo.setDirection(DcMotorSimple.Direction.REVERSE);
 
         //limelight.pipelineSwitch(0);
 
@@ -93,11 +106,10 @@ public class RobotEngine {
 
     }
 
-    public void macanumDrive(double drive, double strafe, double rotate, double speed) {
+    public void macanumDrive(double drive, double strafe, double rotate, double speed, double heading) {
 
         // get the current robot rotation for
         // field centric.
-        double heading = 0;//pinpoint.getHeading(AngleUnit.RADIANS);
 
         // Get the cosine and sine of the heading.
         double cosAngle = Math.cos((Math.PI / 2) - heading);
@@ -105,21 +117,21 @@ public class RobotEngine {
 
         // Adjust the strafe and drive accordingly
         double globalStrafe = drive * cosAngle + strafe * sinAngle;
-        double globalDrive  = drive * cosAngle - strafe * sinAngle;
+        double globalDrive  = drive * sinAngle - strafe * cosAngle;
 
         // get the speeds for all the motors.
         double[] speeds = {
-                (drive + strafe + rotate),
-                (drive - strafe - rotate),
-                (drive - strafe + rotate),
-                (drive + strafe - rotate)
+                (globalDrive + globalStrafe + rotate),
+                (globalDrive - globalStrafe - rotate),
+                (globalDrive - globalStrafe + rotate),
+                (globalDrive + globalStrafe - rotate)
         };
 
         // Because we are adding vectors and motors only take values between
         // [-1,1] we may need to normalize them.
 
         // Loop through all values in the speeds[] array and find the greatest
-        // *magnitude*.  Not the greatest velocity.
+        // magnitude.  Not the greatest velocity.
         double max = Math.abs(speeds[0]);
         for (double currentSpeed : speeds) {
             if (max < Math.abs(currentSpeed)) max = Math.abs(currentSpeed);
@@ -147,7 +159,7 @@ public class RobotEngine {
 
     }
 
-    public void launchTeleOp(boolean launch_button, BALL_TYPE ball_type) { // run every frame
+    public void launchTeleOp(boolean launch_button, BALL_TYPE ball_type, OpMode opmode) { // run every frame
 
         // get the target and minimum velocity.
         int target_velocity = (ball_type == BALL_TYPE.NECTAR) ? NECTAR_LAUNCHER_TARGET_VELOCITY : POLLEN_LAUNCHER_TARGET_VELOCITY;
@@ -167,6 +179,34 @@ public class RobotEngine {
             windmillServo.setPower(0);
         }
 
+        opmode.telemetry.addData("Ball Type", ball_type);
+
+    }
+
+    public void intakeTeleOp(double intake_trigger, double outtake_trigger, boolean launch_button) {
+
+        double intakePower = intake_trigger - outtake_trigger;
+
+        if (launch_button) {
+            intakePower += 0.5;
+        }
+
+        intake.setPower(intakePower);
+        leftIntakeServo.setPower(intakePower);
+        rightIntakeServo.setPower(intakePower);
+
+    }
+    public void intakeAuto(double intakePower) {
+
+        intake.setPower(intakePower);
+        leftIntakeServo.setPower(intakePower);
+        rightIntakeServo.setPower(intakePower);
+
+    }
+
+    double getRobotHeading() {
+        // get the yaw of the robot
+        return 0;//imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
     }
 
     public void launchAuto(LinearOpMode opmode, BALL_TYPE ball_type) {

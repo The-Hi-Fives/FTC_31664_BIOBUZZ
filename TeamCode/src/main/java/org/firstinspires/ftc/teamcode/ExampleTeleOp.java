@@ -26,7 +26,7 @@ public class ExampleTeleOp extends OpMode {
         double strafe =  gamepad1.left_stick_x;
         double rotate =  gamepad1.right_stick_x;
 
-        robot.macanumDrive(drive,strafe,rotate,1000);
+        robot.macanumDrive(drive,strafe,rotate,1700, robot.getRobotHeading());
 
         /// launch
         // get button inputs
@@ -47,8 +47,14 @@ public class ExampleTeleOp extends OpMode {
 
         }
 
+        robot.launchTeleOp(launch_button, RobotEngine.BALL_TYPE.NECTAR, this);
 
-        robot.launchTeleOp(launch_button, RobotEngine.BALL_TYPE.NECTAR);
+        /// intake
+        // get input
+        double intake_trigger = gamepad1.right_trigger;
+        double outtake_trigger = gamepad1.left_trigger;
+
+        robot.intakeTeleOp(intake_trigger, outtake_trigger, launch_button);
 
     }
 }

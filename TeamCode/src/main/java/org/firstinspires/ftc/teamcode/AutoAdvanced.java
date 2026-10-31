@@ -96,9 +96,11 @@ public class AutoAdvanced extends LinearOpMode {
         moveRobotTo(12,12,1000);
 
         if (launch()) {
+
             moveRobotTo(10,10,1000);
 
         } else {
+
             moveRobotTo(10,10,1000);
 
         }
