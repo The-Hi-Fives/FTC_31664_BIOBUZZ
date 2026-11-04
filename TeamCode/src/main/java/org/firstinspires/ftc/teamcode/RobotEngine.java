@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.ImuOrientationOnRobot;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -35,10 +36,10 @@ public class RobotEngine {
     public CRServo rightIntakeServo;
     public CRServo windmillServo;
 
-    public HuskyLens huskyLens;
+    //public HuskyLens huskyLens;
     public Limelight3A limelight;
     public IMU imu;
-    public GoBildaPinpointDriver pinpoint;
+    //public GoBildaPinpointDriver pinpoint;
 
     // Nectar
     public final int NECTAR_LAUNCHER_TARGET_VELOCITY = 1425;
@@ -57,9 +58,6 @@ public class RobotEngine {
         intake           = hardMap.get(DcMotor.class, "intake");
         launcher         = hardMap.get(DcMotorEx.class, "launcher");
 
-        //pinpoint         = hardMap.get(GoBildaPinpointDriver.class,"pinpoint");
-        //huskyLens        = hardMap.get(HuskyLens.class, "huskylens");
-
         // reset motor velocity
         frontLeftDrive.setVelocity(0);
         frontRightDrive.setVelocity(0);
@@ -72,6 +70,7 @@ public class RobotEngine {
         backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+        // make sure that the drive motors brake when at zero power
         frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -92,15 +91,19 @@ public class RobotEngine {
         rightIntakeServo.setDirection(DcMotorSimple.Direction.REVERSE);
         windmillServo.setDirection(DcMotorSimple.Direction.REVERSE);
 
+        // set the launcher coefficients
+        launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(40, 0, 0, 12.5));
+
+        //pinpoint         = hardMap.get(GoBildaPinpointDriver.class,"pinpoint");
+        //huskyLens        = hardMap.get(HuskyLens.class, "huskylens");
+
+        //limelight        = hardMap.get(Limelight3A.class, "limelight");
+        //imu              = hardMap.get(IMU.class, "imu");
+
         //limelight.pipelineSwitch(0);
 
         //limelight.start();
-
-        //pinpoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
-        //pinpoint.setOffsets();
-        //pinpoint.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD,GoBildaPinpointDriver.EncoderDirection.FORWARD);
-
-        //pinpoint.resetPosAndIMU();
 
         //imu.resetYaw();
 
@@ -136,10 +139,6 @@ public class RobotEngine {
         for (double currentSpeed : speeds) {
             if (max < Math.abs(currentSpeed)) max = Math.abs(currentSpeed);
         }
-
-        //max = Math.max(Math.abs(speeds[0]), Math.abs(speeds[1]));
-        //max = Math.max(max, Math.abs(speeds[2]));
-        //max = Math.max(max, Math.abs(speeds[3]));
 
         if (max > 1.0) {
             speeds[0]  /= max;
@@ -185,12 +184,15 @@ public class RobotEngine {
 
     public void intakeTeleOp(double intake_trigger, double outtake_trigger, boolean launch_button) {
 
+        // get the intake power
         double intakePower = intake_trigger - outtake_trigger;
 
+        // add 0.5 to the intake power if launching // maybe delete
         if (launch_button) {
             intakePower += 0.5;
         }
 
+        // set the intake servos/motors power
         intake.setPower(intakePower);
         leftIntakeServo.setPower(intakePower);
         rightIntakeServo.setPower(intakePower);
@@ -198,6 +200,7 @@ public class RobotEngine {
     }
     public void intakeAuto(double intakePower) {
 
+        // set the powers of all the intake motors/servos
         intake.setPower(intakePower);
         leftIntakeServo.setPower(intakePower);
         rightIntakeServo.setPower(intakePower);
@@ -211,19 +214,22 @@ public class RobotEngine {
 
     public void launchAuto(LinearOpMode opmode, BALL_TYPE ball_type) {
 
-        // get the target and minimum velocities.
+        // get the target and minimum velocities
         int target_velocity = ball_type.equals(BALL_TYPE.NECTAR) ? NECTAR_LAUNCHER_TARGET_VELOCITY : POLLEN_LAUNCHER_TARGET_VELOCITY;
         int minimum_velocity = ball_type.equals(BALL_TYPE.NECTAR) ? NECTAR_LAUNCHER_MIN_VELOCITY : POLLEN_LAUNCHER_MIN_VELOCITY;
 
         // set the velocity
         launcher.setVelocity(target_velocity);
 
-        // wait until the velocity is larger then the minimum velocity
+        // wait until the velocity is larger than the minimum velocity
         while (opmode.opModeIsActive() && launcher.getVelocity() > minimum_velocity) {
+
+            // notify the robot that the code didn't go rogue.
             opmode.idle();
+
         }
 
-        // turn on the windmill servo.
+        // turn on the windmill servo
         windmillServo.setPower(1);
 
         // wait a second

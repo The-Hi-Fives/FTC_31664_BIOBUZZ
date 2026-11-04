@@ -52,18 +52,6 @@ public class MainTeleOpBasic extends OpMode {
     //private GoBildaPinpointDriver pinpoint;
     //private HuskyLens huskyLens;
 
-    //Deadline rateLimit;
-
-    /*
-     * These two variables are used to control the velocity of the launcher motor.
-     * They are both in encoder ticks per second. The motors we use in the FIRST Tech Challenge
-     * have encoders with a resolution of 28 ticks per revolution. We can convert this to RPM
-     * by dividing the value by 28, to get to revolutions per second, before multiplying by 60
-     * to get revolutions per minute.
-     * We pass the target velocity variable to our motor to set the goal. We use the min velocity
-     * in the launch() function to only run the windmill servo when the motor is spinning fast
-     * enough to make a successful throw.
-     */
     enum BALL_TYPE {
         NECTAR,
         POLLEN
