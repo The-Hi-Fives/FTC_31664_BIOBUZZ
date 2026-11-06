@@ -13,7 +13,7 @@ public class MainTeleOpModular extends OpMode {
     boolean slow_button_down = false;
     boolean slower_button_down = false;
 
-    public final int DRIVE_VELOCITY = 2000;
+    public final int DRIVE_VELOCITY = 2100;
 
     @Override
     public void init() {
@@ -74,7 +74,9 @@ public class MainTeleOpModular extends OpMode {
 
             /// runs 1 time
             // toggle the ball_type (between nectar and pollen)
-            ball_type = (ball_type.equals(RobotEngine.BALL_TYPE.NECTAR)) ? RobotEngine.BALL_TYPE.POLLEN : RobotEngine.BALL_TYPE.NECTAR;
+            ball_type = (ball_type.equals(RobotEngine.BALL_TYPE.NECTAR))
+                    ? RobotEngine.BALL_TYPE.POLLEN  // true
+                    : RobotEngine.BALL_TYPE.NECTAR; // false
 
         } else if (!toggle_button) {
 

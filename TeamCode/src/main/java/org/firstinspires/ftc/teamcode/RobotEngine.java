@@ -2,8 +2,6 @@ package org.firstinspires.ftc.teamcode;
 
 import android.hardware.input.InputManager;
 
-import com.qualcomm.hardware.dfrobot.HuskyLens;
-import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -13,12 +11,12 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.robotcore.hardware.ImuOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.robot.Robot;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-
+/// The RobotEngine class is to easily make Opmodes without typing in the motor and servo declarations every time.
 public class RobotEngine {
 
     enum BALL_TYPE {
@@ -44,10 +42,12 @@ public class RobotEngine {
     // Nectar
     public final int NECTAR_LAUNCHER_TARGET_VELOCITY = 1425;
     public final int NECTAR_LAUNCHER_MIN_VELOCITY = 1300;
+    public final int NECTAR_LAUNCHER_MAX_VELOCITY = 1550;
 
     // Pollen
-    public final int POLLEN_LAUNCHER_TARGET_VELOCITY = 1100;
-    public final int POLLEN_LAUNCHER_MIN_VELOCITY = 975;
+    public final int POLLEN_LAUNCHER_TARGET_VELOCITY = 1150;
+    public final int POLLEN_LAUNCHER_MIN_VELOCITY = 1025;
+    public final int POLLEN_LAUNCHER_MAX_VELOCITY = 1225;
     public void init(HardwareMap hardMap) {
 
         // define and init motors
@@ -58,11 +58,14 @@ public class RobotEngine {
         intake           = hardMap.get(DcMotor.class, "intake");
         launcher         = hardMap.get(DcMotorEx.class, "launcher");
 
-        // reset motor velocity
+        // reset motor velocity/power
         frontLeftDrive.setVelocity(0);
         frontRightDrive.setVelocity(0);
         backLeftDrive.setVelocity(0);
         backRightDrive.setVelocity(0);
+
+        intake.setPower(0);
+        launcher.setVelocity(0);
 
         // set all of these motors to run with encoders
         frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -87,6 +90,11 @@ public class RobotEngine {
         leftIntakeServo  = hardMap.get(CRServo.class, "left_intake_servo");
         rightIntakeServo = hardMap.get(CRServo.class, "right_intake_servo");
 
+        // reset the power of the servos
+        windmillServo.setPower(0);
+        leftIntakeServo.setPower(0);
+        leftIntakeServo.setPower(0);
+
         // set the direction of all the servos
         rightIntakeServo.setDirection(DcMotorSimple.Direction.REVERSE);
         windmillServo.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -110,9 +118,6 @@ public class RobotEngine {
     }
 
     public void macanumDrive(double drive, double strafe, double rotate, double speed, double heading) {
-
-        // get the current robot rotation for
-        // field centric.
 
         // Get the cosine and sine of the heading.
         double cosAngle = Math.cos((Math.PI / 2) - heading);
@@ -160,9 +165,16 @@ public class RobotEngine {
 
     public void launchTeleOp(boolean launch_button, BALL_TYPE ball_type, OpMode opmode) { // run every frame
 
-        // get the target and minimum velocity.
-        int target_velocity = (ball_type == BALL_TYPE.NECTAR) ? NECTAR_LAUNCHER_TARGET_VELOCITY : POLLEN_LAUNCHER_TARGET_VELOCITY;
-        int minimum_velocity = (ball_type == BALL_TYPE.NECTAR) ? NECTAR_LAUNCHER_MIN_VELOCITY : POLLEN_LAUNCHER_MIN_VELOCITY;
+        // get the target, minimum, and maximum velocity.
+        int target_velocity = (ball_type == BALL_TYPE.NECTAR)
+                ? NECTAR_LAUNCHER_TARGET_VELOCITY  // true
+                : POLLEN_LAUNCHER_TARGET_VELOCITY; // false
+        int minimum_velocity = (ball_type == BALL_TYPE.NECTAR)
+                ? NECTAR_LAUNCHER_MIN_VELOCITY  // true
+                : POLLEN_LAUNCHER_MIN_VELOCITY; // false
+        int maximum_velocity = (ball_type == BALL_TYPE.NECTAR)
+                ? NECTAR_LAUNCHER_MAX_VELOCITY  // true
+                : POLLEN_LAUNCHER_MAX_VELOCITY; // false
 
         // start the motor if the launch button is down.
         if (launch_button) {
@@ -172,7 +184,7 @@ public class RobotEngine {
         }
 
         // wait until the velocity is higher than the minimum velocity, then start the windmill.
-        if (launch_button && launcher.getVelocity() > minimum_velocity) {
+        if (launch_button && launcher.getVelocity() > minimum_velocity && launcher.getVelocity() < maximum_velocity) {
             windmillServo.setPower(1);
         } else {
             windmillServo.setPower(0);
@@ -207,22 +219,29 @@ public class RobotEngine {
 
     }
 
-    double getRobotHeading() {
+    public double getRobotHeading() {
         // get the yaw of the robot
         return 0;//imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
     }
 
     public void launchAuto(LinearOpMode opmode, BALL_TYPE ball_type) {
 
-        // get the target and minimum velocities
-        int target_velocity = ball_type.equals(BALL_TYPE.NECTAR) ? NECTAR_LAUNCHER_TARGET_VELOCITY : POLLEN_LAUNCHER_TARGET_VELOCITY;
-        int minimum_velocity = ball_type.equals(BALL_TYPE.NECTAR) ? NECTAR_LAUNCHER_MIN_VELOCITY : POLLEN_LAUNCHER_MIN_VELOCITY;
+        // get the target, minimum, and maximum velocity.
+        int target_velocity = (ball_type == BALL_TYPE.NECTAR)
+                ? NECTAR_LAUNCHER_TARGET_VELOCITY  // true
+                : POLLEN_LAUNCHER_TARGET_VELOCITY; // false
+        int minimum_velocity = (ball_type == BALL_TYPE.NECTAR)
+                ? NECTAR_LAUNCHER_MIN_VELOCITY  // true
+                : POLLEN_LAUNCHER_MIN_VELOCITY; // false
+        int maximum_velocity = (ball_type == BALL_TYPE.NECTAR)
+                ? NECTAR_LAUNCHER_MAX_VELOCITY  // true
+                : POLLEN_LAUNCHER_MAX_VELOCITY; // false
 
         // set the velocity
         launcher.setVelocity(target_velocity);
 
         // wait until the velocity is larger than the minimum velocity
-        while (opmode.opModeIsActive() && launcher.getVelocity() > minimum_velocity) {
+        while (opmode.opModeIsActive() && launcher.getVelocity() > minimum_velocity && launcher.getVelocity() < maximum_velocity) {
 
             // notify the robot that the code didn't go rogue.
             opmode.idle();
