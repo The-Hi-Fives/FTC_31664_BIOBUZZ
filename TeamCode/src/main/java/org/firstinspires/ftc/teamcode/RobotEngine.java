@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import android.hardware.input.InputManager;
 
 import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -16,6 +17,8 @@ import com.qualcomm.robotcore.robot.Robot;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+
 /// The RobotEngine class is to easily make Opmodes without typing in the motor and servo declarations every time.
 public class RobotEngine {
 
@@ -23,31 +26,25 @@ public class RobotEngine {
         NECTAR,
         POLLEN
     }
-    public DcMotorEx backLeftDrive;
-    public DcMotorEx backRightDrive;
-    public DcMotorEx frontLeftDrive;
-    public DcMotorEx frontRightDrive;
+    public DcMotorEx backLeftDrive, backRightDrive, frontLeftDrive, frontRightDrive;
     public DcMotorEx launcher;
     public DcMotor intake;
-
-    public CRServo leftIntakeServo;
-    public CRServo rightIntakeServo;
-    public CRServo windmillServo;
+    public CRServo leftIntakeServo, rightIntakeServo, leftWindmillServo, rightWindmillServo;
 
     //public HuskyLens huskyLens;
     public Limelight3A limelight;
-    public IMU imu;
+    public SparkFunOTOS sparkFunOTOS;
     //public GoBildaPinpointDriver pinpoint;
 
     // Nectar
     public final int NECTAR_LAUNCHER_TARGET_VELOCITY = 1425;
     public final int NECTAR_LAUNCHER_MIN_VELOCITY = 1300;
-    public final int NECTAR_LAUNCHER_MAX_VELOCITY = 1550;
+    public final int NECTAR_LAUNCHER_MAX_VELOCITY = 1450;
 
     // Pollen
     public final int POLLEN_LAUNCHER_TARGET_VELOCITY = 1150;
     public final int POLLEN_LAUNCHER_MIN_VELOCITY = 1025;
-    public final int POLLEN_LAUNCHER_MAX_VELOCITY = 1225;
+    public final int POLLEN_LAUNCHER_MAX_VELOCITY = 1175;
     public void init(HardwareMap hardMap) {
 
         // define and init motors
@@ -85,35 +82,63 @@ public class RobotEngine {
         frontLeftDrive.setDirection(DcMotorSimple.Direction.REVERSE);
         frontRightDrive.setDirection(DcMotorSimple.Direction.FORWARD);
 
+        // set up the OTOS for field oriented driving
+        //sparkFunOTOS = hardMap.get(SparkFunOTOS.class, "sensor_otos");
+
+        //configureOTOS();
+
         // define and init servos
-        windmillServo    = hardMap.get(CRServo.class, "windmill");
-        leftIntakeServo  = hardMap.get(CRServo.class, "left_intake_servo");
-        rightIntakeServo = hardMap.get(CRServo.class, "right_intake_servo");
+        leftWindmillServo   = hardMap.get(CRServo.class, "left_windmill");
+        rightWindmillServo  = hardMap.get(CRServo.class, "right_windmill");
+        leftIntakeServo     = hardMap.get(CRServo.class, "left_intake_servo");
+        rightIntakeServo    = hardMap.get(CRServo.class, "right_intake_servo");
 
         // reset the power of the servos
-        windmillServo.setPower(0);
+        leftWindmillServo.setPower(0);
+        rightWindmillServo.setPower(0);
         leftIntakeServo.setPower(0);
-        leftIntakeServo.setPower(0);
+        rightIntakeServo.setPower(0);
 
         // set the direction of all the servos
         rightIntakeServo.setDirection(DcMotorSimple.Direction.REVERSE);
-        windmillServo.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightWindmillServo.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftWindmillServo.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftIntakeServo.setDirection(DcMotorSimple.Direction.FORWARD);
 
         // set the launcher coefficients
         launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(40, 0, 0, 12.5));
 
-        //pinpoint         = hardMap.get(GoBildaPinpointDriver.class,"pinpoint");
-        //huskyLens        = hardMap.get(HuskyLens.class, "huskylens");
+    }
 
-        //limelight        = hardMap.get(Limelight3A.class, "limelight");
-        //imu              = hardMap.get(IMU.class, "imu");
+    void configureOTOS() { // configure
 
-        //limelight.pipelineSwitch(0);
+        // use inches and degrees
+        sparkFunOTOS.setLinearUnit(DistanceUnit.INCH);
+        sparkFunOTOS.setAngularUnit(AngleUnit.DEGREES);
 
-        //limelight.start();
+        // adjust the offset of the sensor from the center of the robot
+        SparkFunOTOS.Pose2D offset = new SparkFunOTOS.Pose2D(0, 0, 0);
+        sparkFunOTOS.setOffset(offset);
 
-        //imu.resetYaw();
+        // set the scalar to have more accurate results
+        sparkFunOTOS.setLinearScalar(1.0);
+        sparkFunOTOS.setAngularScalar(1.0);
+
+        // calibrate so it calibrates
+        sparkFunOTOS.calibrateImu();
+
+        // reset the tracking to be at the origin
+        sparkFunOTOS.resetTracking();
+
+        // starting position
+        SparkFunOTOS.Pose2D currentPosition = new SparkFunOTOS.Pose2D(0, 0, 0);
+        sparkFunOTOS.setPosition(currentPosition);
+
+        // get the version
+        SparkFunOTOS.Version hwVersion = new SparkFunOTOS.Version();
+        SparkFunOTOS.Version fwVersion = new SparkFunOTOS.Version();
+        sparkFunOTOS.getVersionInfo(hwVersion, fwVersion);
 
     }
 
@@ -142,14 +167,18 @@ public class RobotEngine {
         // magnitude.  Not the greatest velocity.
         double max = Math.abs(speeds[0]);
         for (double currentSpeed : speeds) {
+
             if (max < Math.abs(currentSpeed)) max = Math.abs(currentSpeed);
+
         }
 
         if (max > 1.0) {
+
             speeds[0]  /= max;
             speeds[1] /= max;
             speeds[2]   /= max;
             speeds[3]  /= max;
+
         }
 
         // If and only if the maximum is outside the range we want it to be,
@@ -178,16 +207,26 @@ public class RobotEngine {
 
         // start the motor if the launch button is down.
         if (launch_button) {
+
             launcher.setVelocity(target_velocity);
+
         } else {
+
             launcher.setVelocity(0);
+
         }
 
         // wait until the velocity is higher than the minimum velocity, then start the windmill.
         if (launch_button && launcher.getVelocity() > minimum_velocity && launcher.getVelocity() < maximum_velocity) {
-            windmillServo.setPower(1);
+
+            leftWindmillServo.setPower(1);
+            rightWindmillServo.setPower(1);
+
         } else {
-            windmillServo.setPower(0);
+
+            leftWindmillServo.setPower(0);
+            rightWindmillServo.setPower(0);
+
         }
 
         opmode.telemetry.addData("Ball Type", ball_type);
@@ -220,8 +259,10 @@ public class RobotEngine {
     }
 
     public double getRobotHeading() {
+
         // get the yaw of the robot
         return 0;//imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+
     }
 
     public void launchAuto(LinearOpMode opmode, BALL_TYPE ball_type) {
@@ -249,14 +290,17 @@ public class RobotEngine {
         }
 
         // turn on the windmill servo
-        windmillServo.setPower(1);
+        leftWindmillServo.setPower(1);
+        rightWindmillServo.setPower(1);
 
         // wait a second
         opmode.sleep(1000);
 
         // stop everything
-        windmillServo.setPower(0);
+        leftWindmillServo.setPower(0);
+        rightWindmillServo.setPower(0);
         launcher.setVelocity(0);
 
     }
+
 }
