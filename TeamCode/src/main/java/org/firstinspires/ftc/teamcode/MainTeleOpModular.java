@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+// adb connect 192.168.43.1:5555
+
 @TeleOp(name = "Main TeleOp Modular", group = "StarterBot")
 public class MainTeleOpModular extends OpMode {
     RobotEngine robot = new RobotEngine();
@@ -64,8 +66,9 @@ public class MainTeleOpModular extends OpMode {
 
         /// launch
         // get button inputs
-        boolean toggle_button = (gamepad1.a || gamepad1.b);
-        boolean launch_button = gamepad1.right_bumper;
+        boolean toggle_button = (gamepad2.a || gamepad2.b);
+        boolean launch_button = gamepad2.right_bumper;
+        boolean windmill_reverse_button = gamepad2.dpad_left;
 
         // change ball_type if toggle button is just pressed
         if (toggle_button && !ball_type_toggle_down) {
@@ -84,12 +87,16 @@ public class MainTeleOpModular extends OpMode {
 
         }
 
-        robot.launchTeleOp(launch_button, ball_type, this);
+        robot.launchTeleOp(launch_button, ball_type, windmill_reverse_button, this);
 
         /// intake
         // get input
-        double intake_trigger = gamepad1.right_trigger;
-        double outtake_trigger = gamepad1.left_trigger;
+        double intake_trigger = (gamepad1.right_trigger >= 0.3)
+                ? gamepad1.right_trigger  // true
+                : gamepad2.right_trigger; // false
+        double outtake_trigger = (gamepad1.left_trigger >= 0.3)
+                ? gamepad1.left_trigger  // true
+                : gamepad2.left_trigger; // false
 
         robot.intakeTeleOp(intake_trigger, outtake_trigger, launch_button);
 

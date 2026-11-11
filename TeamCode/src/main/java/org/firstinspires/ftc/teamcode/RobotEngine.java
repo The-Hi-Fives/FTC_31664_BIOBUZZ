@@ -37,9 +37,9 @@ public class RobotEngine {
     //public GoBildaPinpointDriver pinpoint;
 
     // Nectar
-    public final int NECTAR_LAUNCHER_TARGET_VELOCITY = 1425;
-    public final int NECTAR_LAUNCHER_MIN_VELOCITY = 1300;
-    public final int NECTAR_LAUNCHER_MAX_VELOCITY = 1450;
+    public final int NECTAR_LAUNCHER_TARGET_VELOCITY = 1525;
+    public final int NECTAR_LAUNCHER_MIN_VELOCITY = 1400;
+    public final int NECTAR_LAUNCHER_MAX_VELOCITY = 1550;
 
     // Pollen
     public final int POLLEN_LAUNCHER_TARGET_VELOCITY = 1150;
@@ -192,7 +192,7 @@ public class RobotEngine {
 
     }
 
-    public void launchTeleOp(boolean launch_button, BALL_TYPE ball_type, OpMode opmode) { // run every frame
+    public void launchTeleOp(boolean launch_button, BALL_TYPE ball_type, boolean windmill_reverse_button , OpMode opmode) { // run every frame
 
         // get the target, minimum, and maximum velocity.
         int target_velocity = (ball_type == BALL_TYPE.NECTAR)
@@ -222,6 +222,11 @@ public class RobotEngine {
             leftWindmillServo.setPower(1);
             rightWindmillServo.setPower(1);
 
+        } else if (windmill_reverse_button) {
+
+            leftWindmillServo.setPower(-1);
+            rightWindmillServo.setPower(-1);
+
         } else {
 
             leftWindmillServo.setPower(0);
@@ -239,9 +244,9 @@ public class RobotEngine {
         double intakePower = intake_trigger - outtake_trigger;
 
         // add 0.5 to the intake power if launching // maybe delete
-        if (launch_button) {
-            intakePower += 0.5;
-        }
+        //if (launch_button) {
+        //    intakePower += 0.5;
+        //}
 
         // set the intake servos/motors power
         intake.setPower(intakePower);

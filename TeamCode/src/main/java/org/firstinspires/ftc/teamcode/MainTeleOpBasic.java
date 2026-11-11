@@ -4,6 +4,7 @@ import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
 
 //import com.qualcomm.hardware.dfrobot.HuskyLens;
 //import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -34,7 +35,7 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
  */
 
 @TeleOp(name = "Main TeleOp Basic", group = "StarterBot")
-//@Disabled // Add After
+@Disabled // Add After
 public class MainTeleOpBasic extends OpMode {
 
     // Declare OpMode members.
