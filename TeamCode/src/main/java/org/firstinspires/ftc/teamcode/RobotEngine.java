@@ -10,13 +10,12 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
-import com.qualcomm.robotcore.robot.Robot;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 /// The RobotEngine class is to easily make Opmodes without typing in the motor and servo declarations every time.
@@ -24,7 +23,8 @@ public class RobotEngine {
 
     enum BALL_TYPE {
         NECTAR,
-        POLLEN
+        POLLEN,
+        FLOWER,
     }
     public DcMotorEx backLeftDrive, backRightDrive, frontLeftDrive, frontRightDrive;
     public DcMotorEx launcher;
@@ -36,15 +36,26 @@ public class RobotEngine {
     public SparkFunOTOS sparkFunOTOS;
     //public GoBildaPinpointDriver pinpoint;
 
+    Gamepad gamepad1;
+    Gamepad gamepad2;
+
+    public final int MACANUM_SPEED = 2000;
+
     // Nectar
     public final int NECTAR_LAUNCHER_TARGET_VELOCITY = 1525;
     public final int NECTAR_LAUNCHER_MIN_VELOCITY = 1400;
     public final int NECTAR_LAUNCHER_MAX_VELOCITY = 1550;
 
     // Pollen
-    public final int POLLEN_LAUNCHER_TARGET_VELOCITY = 1150;
-    public final int POLLEN_LAUNCHER_MIN_VELOCITY = 1025;
-    public final int POLLEN_LAUNCHER_MAX_VELOCITY = 1175;
+    public final int POLLEN_LAUNCHER_TARGET_VELOCITY = 1350;
+    public final int POLLEN_LAUNCHER_MIN_VELOCITY = 1225;
+    public final int POLLEN_LAUNCHER_MAX_VELOCITY = 1375;
+
+    // Flower
+    public final int FLOWER_LAUNCHER_TARGET_VELOCITY = 950;
+    public final int FLOWER_LAUNCHER_MIN_VELOCITY = 825;
+    public final int FLOWER_LAUNCHER_MAX_VELOCITY = 1100;
+
     public void init(HardwareMap hardMap) {
 
         // define and init motors
@@ -84,8 +95,13 @@ public class RobotEngine {
 
         // set up the OTOS for field oriented driving
         //sparkFunOTOS = hardMap.get(SparkFunOTOS.class, "sensor_otos");
-
         //configureOTOS();
+
+        // set up limelight to have accurate autos
+        // limelight = hardMap.get(Limelight3A.class,"limelight");
+
+        //configureLimelight();
+
 
         // define and init servos
         leftWindmillServo   = hardMap.get(CRServo.class, "left_windmill");
@@ -108,6 +124,20 @@ public class RobotEngine {
         // set the launcher coefficients
         launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(40, 0, 0, 12.5));
+
+    }
+
+    public void initGamepad(Gamepad controller1, Gamepad controller2) {
+
+        gamepad1 = controller1;
+
+        if (isGamepadConnected(controller2)) {
+            gamepad2 = controller2;
+        } else {
+            gamepad2 = controller1;
+        }
+
+
 
     }
 
@@ -140,6 +170,10 @@ public class RobotEngine {
         SparkFunOTOS.Version fwVersion = new SparkFunOTOS.Version();
         sparkFunOTOS.getVersionInfo(hwVersion, fwVersion);
 
+    }
+    public void configureLimelight() {
+        limelight.setPollRateHz(100);
+        limelight.start();
     }
 
     public void macanumDrive(double drive, double strafe, double rotate, double speed, double heading) {
@@ -196,14 +230,20 @@ public class RobotEngine {
 
         // get the target, minimum, and maximum velocity.
         int target_velocity = (ball_type == BALL_TYPE.NECTAR)
-                ? NECTAR_LAUNCHER_TARGET_VELOCITY  // true
-                : POLLEN_LAUNCHER_TARGET_VELOCITY; // false
+                ? NECTAR_LAUNCHER_TARGET_VELOCITY  // NECTAR
+                : (ball_type == BALL_TYPE.POLLEN)
+                ? POLLEN_LAUNCHER_TARGET_VELOCITY  // Pollen
+                : FLOWER_LAUNCHER_TARGET_VELOCITY; // FLOWER
         int minimum_velocity = (ball_type == BALL_TYPE.NECTAR)
-                ? NECTAR_LAUNCHER_MIN_VELOCITY  // true
-                : POLLEN_LAUNCHER_MIN_VELOCITY; // false
+                ? NECTAR_LAUNCHER_MIN_VELOCITY  // NECTAR
+                : (ball_type == BALL_TYPE.POLLEN)
+                ? POLLEN_LAUNCHER_MIN_VELOCITY  // Pollen
+                : FLOWER_LAUNCHER_MIN_VELOCITY; // FLOWER
         int maximum_velocity = (ball_type == BALL_TYPE.NECTAR)
-                ? NECTAR_LAUNCHER_MAX_VELOCITY  // true
-                : POLLEN_LAUNCHER_MAX_VELOCITY; // false
+                ? NECTAR_LAUNCHER_MAX_VELOCITY  // NECTAR
+                : (ball_type == BALL_TYPE.POLLEN)
+                ? POLLEN_LAUNCHER_MAX_VELOCITY  // Pollen
+                : FLOWER_LAUNCHER_MAX_VELOCITY; // FLOWER
 
         // start the motor if the launch button is down.
         if (launch_button) {
@@ -306,6 +346,10 @@ public class RobotEngine {
         rightWindmillServo.setPower(0);
         launcher.setVelocity(0);
 
+    }
+
+    public boolean isGamepadConnected(Gamepad gamepad) {
+        return (gamepad.getGamepadId() != Gamepad.ID_UNASSOCIATED);
     }
 
 }

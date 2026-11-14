@@ -15,12 +15,13 @@ public class MainTeleOpModular extends OpMode {
     boolean slow_button_down = false;
     boolean slower_button_down = false;
 
-    public final int DRIVE_VELOCITY = 2100;
+    public final int DRIVE_VELOCITY = 2800; // max is 2800
 
     @Override
     public void init() {
 
         robot.init(hardwareMap);
+        robot.initGamepad(gamepad1,gamepad2);
 
     }
 
@@ -29,13 +30,13 @@ public class MainTeleOpModular extends OpMode {
 
         /// drive
         // get the joystick inputs
-        double drive  = -gamepad1.left_stick_y;
-        double strafe =  gamepad1.left_stick_x;
-        double rotate =  gamepad1.right_stick_x;
+        double drive  = -robot.gamepad1.left_stick_y;
+        double strafe =  robot.gamepad1.left_stick_x;
+        double rotate =  robot.gamepad1.right_stick_x;
 
         // if "y" is down, don't do "x"'s input, and vice versa
-        boolean slow_button = gamepad1.y;
-        boolean slower_button = gamepad1.x;
+        boolean slow_button = robot.gamepad1.y;
+        boolean slower_button = robot.gamepad1.x;
 
         int driveVelocity = DRIVE_VELOCITY;
 
@@ -66,9 +67,10 @@ public class MainTeleOpModular extends OpMode {
 
         /// launch
         // get button inputs
-        boolean toggle_button = (gamepad2.a || gamepad2.b);
-        boolean launch_button = gamepad2.right_bumper;
-        boolean windmill_reverse_button = gamepad2.dpad_left;
+        boolean toggle_button = (robot.gamepad2.a || robot.gamepad2.b);
+        boolean launch_button = robot.gamepad2.right_bumper;
+        boolean windmill_reverse_button = robot.gamepad2.dpad_left;
+
 
         // change ball_type if toggle button is just pressed
         if (toggle_button && !ball_type_toggle_down) {
@@ -77,9 +79,11 @@ public class MainTeleOpModular extends OpMode {
 
             /// runs 1 time
             // toggle the ball_type (between nectar and pollen)
-            ball_type = (ball_type.equals(RobotEngine.BALL_TYPE.NECTAR))
-                    ? RobotEngine.BALL_TYPE.POLLEN  // true
-                    : RobotEngine.BALL_TYPE.NECTAR; // false
+            ball_type = (ball_type == RobotEngine.BALL_TYPE.NECTAR)
+                    ? RobotEngine.BALL_TYPE.POLLEN  // if NECTAR
+                    : (ball_type == RobotEngine.BALL_TYPE.POLLEN)
+                    ? RobotEngine.BALL_TYPE.FLOWER  // if Pollen
+                    : RobotEngine.BALL_TYPE.NECTAR; // if FLOWER
 
         } else if (!toggle_button) {
 
@@ -92,11 +96,11 @@ public class MainTeleOpModular extends OpMode {
         /// intake
         // get input
         double intake_trigger = (gamepad1.right_trigger >= 0.3)
-                ? gamepad1.right_trigger  // true
-                : gamepad2.right_trigger; // false
+                ? robot.gamepad1.right_trigger  // true
+                : robot.gamepad2.right_trigger; // false
         double outtake_trigger = (gamepad1.left_trigger >= 0.3)
-                ? gamepad1.left_trigger  // true
-                : gamepad2.left_trigger; // false
+                ? robot.gamepad1.left_trigger  // true
+                : robot.gamepad2.left_trigger; // false
 
         robot.intakeTeleOp(intake_trigger, outtake_trigger, launch_button);
 
