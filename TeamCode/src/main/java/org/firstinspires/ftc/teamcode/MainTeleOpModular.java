@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 // adb connect 192.168.43.1:5555
 
-@TeleOp(name = "Main TeleOp Modular", group = "StarterBot")
+@TeleOp(name = "Main TeleOp Modular", group = "StarterBot TeleOp")
 public class MainTeleOpModular extends OpMode {
     RobotEngine robot = new RobotEngine();
 
