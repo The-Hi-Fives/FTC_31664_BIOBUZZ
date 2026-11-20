@@ -1,11 +1,15 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-@Autonomous(name = "Right Hive Autonomous", group = "StarterBot Auto")
-public class RightHiveAuto extends LinearOpMode {
+@Autonomous(name = "Right Hive Launch Autonomous", group = "StarterBot Auto")
+
+@Disabled // DELETE AFTER !!!!!!!
+
+public class RightHiveLaunchAuto extends LinearOpMode {
 
     RobotEngine robot = new RobotEngine();
     private ElapsedTime runtime = new ElapsedTime();
@@ -19,6 +23,10 @@ public class RightHiveAuto extends LinearOpMode {
         runtime.reset();
 
         // put auto code here
+
+        // move slightly back
+
+        // Launch pre-loaded pollen
 
 
 

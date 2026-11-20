@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode;
 
 import android.hardware.input.InputManager;
 
+import androidx.annotation.NonNull;
+
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -14,6 +16,7 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -30,6 +33,8 @@ public class RobotEngine {
     public DcMotorEx launcher;
     public DcMotor intake;
     public CRServo leftIntakeServo, rightIntakeServo, leftWindmillServo, rightWindmillServo;
+    
+    //public Servo angularServo;
 
     //public HuskyLens huskyLens;
     public Limelight3A limelight;
@@ -55,6 +60,10 @@ public class RobotEngine {
     public final int FLOWER_LAUNCHER_TARGET_VELOCITY = 950;
     public final int FLOWER_LAUNCHER_MIN_VELOCITY = 825;
     public final int FLOWER_LAUNCHER_MAX_VELOCITY = 1100;
+
+    // Angular Servo Positions
+    //public final double NECTAR_ANGLE_POSITION = 0.6;
+    //public final double POLLEN_ANGLE_POSITION = 0.0;
 
     public void init(HardwareMap hardMap) {
 
@@ -109,6 +118,8 @@ public class RobotEngine {
         leftIntakeServo     = hardMap.get(CRServo.class, "left_intake_servo");
         rightIntakeServo    = hardMap.get(CRServo.class, "right_intake_servo");
 
+        //angularServo        = hardMap.get(Servo.class, "angular_servo");
+
         // reset the power of the servos
         leftWindmillServo.setPower(0);
         rightWindmillServo.setPower(0);
@@ -120,6 +131,8 @@ public class RobotEngine {
         rightWindmillServo.setDirection(DcMotorSimple.Direction.REVERSE);
         leftWindmillServo.setDirection(DcMotorSimple.Direction.REVERSE);
         leftIntakeServo.setDirection(DcMotorSimple.Direction.FORWARD);
+
+        //angularServo.setDirection(Servo.Direction.REVERSE);
 
         // set the launcher coefficients
         launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -136,8 +149,6 @@ public class RobotEngine {
         } else {
             gamepad2 = controller1;
         }
-
-
 
     }
 
@@ -172,8 +183,10 @@ public class RobotEngine {
 
     }
     public void configureLimelight() {
+
         limelight.setPollRateHz(100);
         limelight.start();
+
     }
 
     public void macanumDrive(double drive, double strafe, double rotate, double speed, double heading) {
@@ -228,7 +241,12 @@ public class RobotEngine {
 
     public void launchTeleOp(boolean launch_button, BALL_TYPE ball_type, boolean windmill_reverse_button , OpMode opmode) { // run every frame
 
+        // set the target position
+        //double target_position = (ball_type == BALL_TYPE.NECTAR) ? NECTAR_ANGLE_POSITION : POLLEN_ANGLE_POSITION;
+        //angularServo.setPosition(target_position);
+
         // get the target, minimum, and maximum velocity.
+
         int target_velocity = (ball_type == BALL_TYPE.NECTAR)
                 ? NECTAR_LAUNCHER_TARGET_VELOCITY  // NECTAR
                 : (ball_type == BALL_TYPE.POLLEN)
@@ -311,6 +329,10 @@ public class RobotEngine {
     }
 
     public void launchAuto(LinearOpMode opmode, BALL_TYPE ball_type) {
+
+        // set the target position
+        //double target_position = (ball_type == BALL_TYPE.NECTAR) ? NECTAR_ANGLE_POSITION : POLLEN_ANGLE_POSITION;
+        //angularServo.setPosition(target_position);
 
         // get the target, minimum, and maximum velocity.
         int target_velocity = (ball_type == BALL_TYPE.NECTAR)
