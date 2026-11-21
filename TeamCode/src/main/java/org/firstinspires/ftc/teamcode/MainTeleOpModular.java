@@ -69,38 +69,34 @@ public class MainTeleOpModular extends OpMode {
         // get button inputs
         boolean toggle_button = (robot.gamepad2.a || robot.gamepad2.b);
         boolean launch_button = robot.gamepad2.right_bumper;
-        boolean windmill_reverse_button = robot.gamepad2.dpad_left;
 
+        double outtake_trigger = (gamepad1.left_trigger >= 0.3)
+                ? robot.gamepad1.left_trigger  // true
+                : robot.gamepad2.left_trigger; // false
 
         // change ball_type if toggle button is just pressed
-        if (toggle_button && !ball_type_toggle_down) {
 
-            ball_type_toggle_down = true;
+        boolean nectar_button = robot.gamepad2.dpad_up;
+        boolean pollen_button = robot.gamepad2.dpad_down;
+        boolean flower_button = robot.gamepad2.dpad_right;
 
-            /// runs 1 time
-            // toggle the ball_type (between nectar and pollen)
-            ball_type = (ball_type == RobotEngine.BALL_TYPE.NECTAR)
-                    ? RobotEngine.BALL_TYPE.POLLEN  // if NECTAR
-                    : (ball_type == RobotEngine.BALL_TYPE.POLLEN)
-                    ? RobotEngine.BALL_TYPE.FLOWER  // if Pollen
-                    : RobotEngine.BALL_TYPE.NECTAR; // if FLOWER
-
-        } else if (!toggle_button) {
-
-            ball_type_toggle_down = false;
-
+        if (nectar_button) {
+            robot.launchTeleOp(launch_button, RobotEngine.BALL_TYPE.NECTAR, outtake_trigger > 0.5, this);
+        } else if (pollen_button) {
+            robot.launchTeleOp(launch_button, RobotEngine.BALL_TYPE.POLLEN, outtake_trigger > 0.5, this);
+        } else if (flower_button) {
+            robot.launchTeleOp(launch_button, RobotEngine.BALL_TYPE.FLOWER, outtake_trigger > 0.5, this);
+        } else {
+            robot.launchTeleOp(launch_button, RobotEngine.BALL_TYPE.POLLEN, outtake_trigger > 0.5, this);
         }
 
-        robot.launchTeleOp(launch_button, ball_type, windmill_reverse_button, this);
+        //robot.launchTeleOp(launch_button, ball_type, outtake_trigger > 0.5, this);
 
         /// intake
         // get input
         double intake_trigger = (gamepad1.right_trigger >= 0.3)
                 ? robot.gamepad1.right_trigger  // true
                 : robot.gamepad2.right_trigger; // false
-        double outtake_trigger = (gamepad1.left_trigger >= 0.3)
-                ? robot.gamepad1.left_trigger  // true
-                : robot.gamepad2.left_trigger; // false
 
         robot.intakeTeleOp(intake_trigger, outtake_trigger, launch_button);
 

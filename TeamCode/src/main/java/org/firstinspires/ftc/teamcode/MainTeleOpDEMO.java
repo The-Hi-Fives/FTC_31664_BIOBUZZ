@@ -1,11 +1,13 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 // adb connect 192.168.43.1:5555
 
 @TeleOp(name = "TeleOp DEMO", group = "StarterBot DEMO")
+@Disabled
 public class MainTeleOpDEMO extends OpMode {
     RobotEngine robot = new RobotEngine();
 
@@ -23,7 +25,7 @@ public class MainTeleOpDEMO extends OpMode {
     public void init() {
 
         robot.init(hardwareMap);
-        robot.initGamepad(gamepad1,gamepad2);
+        robot.initGamepad(gamepad1, gamepad2);
 
     }
 

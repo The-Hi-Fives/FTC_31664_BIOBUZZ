@@ -47,14 +47,14 @@ public class RobotEngine {
     public final int MACANUM_SPEED = 2000;
 
     // Nectar
-    public final int NECTAR_LAUNCHER_TARGET_VELOCITY = 1525;
-    public final int NECTAR_LAUNCHER_MIN_VELOCITY = 1400;
-    public final int NECTAR_LAUNCHER_MAX_VELOCITY = 1550;
+    public final int NECTAR_LAUNCHER_TARGET_VELOCITY = 1325;
+    public final int NECTAR_LAUNCHER_MIN_VELOCITY = 1200;
+    public final int NECTAR_LAUNCHER_MAX_VELOCITY = 1350;
 
     // Pollen
-    public final int POLLEN_LAUNCHER_TARGET_VELOCITY = 1350;
-    public final int POLLEN_LAUNCHER_MIN_VELOCITY = 1225;
-    public final int POLLEN_LAUNCHER_MAX_VELOCITY = 1375;
+    public final int POLLEN_LAUNCHER_TARGET_VELOCITY = 1250;
+    public final int POLLEN_LAUNCHER_MIN_VELOCITY = 1125;
+    public final int POLLEN_LAUNCHER_MAX_VELOCITY = 1275;
 
     // Flower
     public final int FLOWER_LAUNCHER_TARGET_VELOCITY = 950;
@@ -142,7 +142,11 @@ public class RobotEngine {
 
     public void initGamepad(Gamepad controller1, Gamepad controller2) {
 
-        gamepad1 = controller1;
+        if (isGamepadConnected(controller1)) {
+            gamepad1 = controller1;
+        } else {
+            gamepad1 = controller2;
+        }
 
         if (isGamepadConnected(controller2)) {
             gamepad2 = controller2;
@@ -239,7 +243,7 @@ public class RobotEngine {
 
     }
 
-    public void launchTeleOp(boolean launch_button, BALL_TYPE ball_type, boolean windmill_reverse_button , OpMode opmode) { // run every frame
+    public void launchTeleOp(boolean launch_button, BALL_TYPE ball_type, boolean outtake_button , OpMode opmode) { // run every frame
 
         // set the target position
         //double target_position = (ball_type == BALL_TYPE.NECTAR) ? NECTAR_ANGLE_POSITION : POLLEN_ANGLE_POSITION;
@@ -280,10 +284,12 @@ public class RobotEngine {
             leftWindmillServo.setPower(1);
             rightWindmillServo.setPower(1);
 
-        } else if (windmill_reverse_button) {
+        } else if (outtake_button) {
 
             leftWindmillServo.setPower(-1);
             rightWindmillServo.setPower(-1);
+
+            launcher.setVelocity(-1000);
 
         } else {
 
@@ -328,7 +334,7 @@ public class RobotEngine {
 
     }
 
-    public void launchAuto(LinearOpMode opmode, BALL_TYPE ball_type) {
+    public void launchAuto(LinearOpMode opmode, BALL_TYPE ball_type, double multiplier) {
 
         // set the target position
         //double target_position = (ball_type == BALL_TYPE.NECTAR) ? NECTAR_ANGLE_POSITION : POLLEN_ANGLE_POSITION;
@@ -345,29 +351,28 @@ public class RobotEngine {
                 ? NECTAR_LAUNCHER_MAX_VELOCITY  // true
                 : POLLEN_LAUNCHER_MAX_VELOCITY; // false
 
+        target_velocity = (int)((double) target_velocity * multiplier);
+        minimum_velocity = (int)((double) minimum_velocity * multiplier);
+        maximum_velocity = (int)((double) maximum_velocity * multiplier);
+
+
         // set the velocity
         launcher.setVelocity(target_velocity);
 
-        // wait until the velocity is larger than the minimum velocity
-        while (opmode.opModeIsActive() && launcher.getVelocity() > minimum_velocity && launcher.getVelocity() < maximum_velocity) {
-
-            // notify the robot that the code didn't go rogue.
-            opmode.idle();
-
+        if (launcher.getVelocity() > minimum_velocity && launcher.getVelocity() < maximum_velocity) {
+            leftWindmillServo.setPower(1);
+            rightWindmillServo.setPower(1);
+        } else {
+            leftWindmillServo.setPower(0);
+            rightWindmillServo.setPower(0);
         }
 
-        // turn on the windmill servo
-        leftWindmillServo.setPower(1);
-        rightWindmillServo.setPower(1);
+    }
 
-        // wait a second
-        opmode.sleep(1000);
-
-        // stop everything
+    void resetLaunch() {
         leftWindmillServo.setPower(0);
         rightWindmillServo.setPower(0);
         launcher.setVelocity(0);
-
     }
 
     public boolean isGamepadConnected(Gamepad gamepad) {
