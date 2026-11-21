@@ -104,7 +104,7 @@ public class RightHiveLaunchAuto extends LinearOpMode {
 
                     robot.macanumDrive(0,1.0,0,500,0);
 
-                    if (runtime.milliseconds() > current_runtime + 1500) { // wait
+                    if (runtime.milliseconds() > current_runtime + 2000) { // wait
                         current_step = AutoStep.END; // end the auto
                         current_runtime = runtime.milliseconds();
                     }
